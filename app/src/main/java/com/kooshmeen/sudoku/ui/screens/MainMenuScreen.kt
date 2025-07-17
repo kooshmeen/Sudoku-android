@@ -4,6 +4,7 @@ package com.kooshmeen.sudoku.ui.screens
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.rounded.Settings
@@ -29,6 +30,9 @@ fun MainMenuScreen (
         onThemeToggle: (Boolean) -> Unit = { /* Default no-op */ },
         isDarkTheme: Boolean = true // Default value for dark theme
 ) {
+    var isDifficultyDropdownOpen by remember { mutableStateOf(false) }
+    var selectedDifficulty by remember { mutableStateOf("Easy") }
+
     Column (
         modifier = Modifier
             .fillMaxSize()
@@ -37,7 +41,9 @@ fun MainMenuScreen (
         Spacer(modifier = Modifier.height(32.dp))
 
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -61,12 +67,12 @@ fun MainMenuScreen (
                     imageVector = Icons.Rounded.Settings,
                     contentDescription = "Settings",
                     tint = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier
+                        .size(24.dp)
                         .fillMaxSize()
                 )
             }
         }
-
 
         // Title
         Spacer(modifier = Modifier.height(64.dp))
@@ -81,7 +87,9 @@ fun MainMenuScreen (
         // Play button - start game if no game started
         Button(
             onClick = { /* TODO: Start Game */ },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
         ) {
             Text(
                 text = "Start Game",
@@ -91,7 +99,61 @@ fun MainMenuScreen (
         Spacer(modifier = Modifier.height(8.dp))
 
         // Select difficulty
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        ) {
+            OutlinedButton(
+                onClick = { isDifficultyDropdownOpen = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Difficulty: $selectedDifficulty",
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                    Icon(
+                        painter = painterResource(id = R.drawable.arrow_drop_down),
+                        contentDescription = "Dropdown arrow",
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .size(24.dp),
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+            }
 
+            DropdownMenu(
+                expanded = isDifficultyDropdownOpen,
+                onDismissRequest = { isDifficultyDropdownOpen = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Easy") },
+                    onClick = {
+                        selectedDifficulty = "Easy"
+                        isDifficultyDropdownOpen = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Medium") },
+                    onClick = {
+                        selectedDifficulty = "Medium"
+                        isDifficultyDropdownOpen = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Hard") },
+                    onClick = {
+                        selectedDifficulty = "Hard"
+                        isDifficultyDropdownOpen = false
+                    }
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(128.dp))
     }
@@ -100,7 +162,7 @@ fun MainMenuScreen (
 @Preview(showBackground = true)
 @Composable
 fun MainMenuScreenPreview() {
-    var isDarkTheme by remember { mutableStateOf(true) }
+    var isDarkTheme by remember { mutableStateOf(false) }
 
     SudokuTheme(darkTheme = isDarkTheme) {
         MainMenuScreen(
