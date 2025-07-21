@@ -1,5 +1,11 @@
-package com.kooshmeen.sudoku.ui.screens
+/**
+ * MainMenu.kt
+ * This file defines the main menu screen for the Sudoku app.
+ * It includes options to start a game, select difficulty, and toggle themes.
+ * It also includes a settings button.
+ */
 
+package com.kooshmeen.sudoku.ui.screens
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
