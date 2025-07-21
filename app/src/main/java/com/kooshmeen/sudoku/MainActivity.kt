@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
                                     .fillMaxSize()
                                     .padding(innerPadding),
                                 isDarkTheme = isDarkTheme,
-                                onThemeToggle = { isDarkTheme = !isDarkTheme }
+                                onThemeToggle = { isDarkTheme = it }
                             )
                         }
                     }
