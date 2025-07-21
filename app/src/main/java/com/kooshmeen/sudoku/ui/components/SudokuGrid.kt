@@ -61,7 +61,7 @@ private fun getBoxBorderModifier(row: Int, col: Int): Modifier {
 
     return Modifier.drawBehind {
         val thinStroke = 1.dp.toPx()
-        val thickStroke = 3.dp.toPx()
+        val thickStroke = 4.dp.toPx()
 
         // Draw thick top border for rows 3 and 6
         if (row == 3 || row == 6) {

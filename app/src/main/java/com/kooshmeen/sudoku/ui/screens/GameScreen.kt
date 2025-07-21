@@ -5,6 +5,7 @@
 
 package com.kooshmeen.sudoku.ui.screens
 
+import android.renderscript.ScriptGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,30 +13,28 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import com.kooshmeen.sudoku.R
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.ui.graphics.Color
-import androidx.compose.material3.AlertDialogDefaults.containerColor
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.kooshmeen.sudoku.ui.components.SudokuGrid
 import com.kooshmeen.sudoku.ui.theme.SudokuTheme
+import com.kooshmeen.sudoku.ui.*
+import com.kooshmeen.sudoku.ui.components.InputRow
 
 @Composable
 fun GameScreen(
@@ -44,10 +43,11 @@ fun GameScreen(
     isDarkTheme: Boolean = true, // Default value for dark theme
     onNavigateToMenu: () -> Unit = { /* Default no-op */ }
 ) {
+    var selectedNumber by remember { mutableStateOf<Int?>(null) } // Track selected number
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(2.dp)
             .background(MaterialTheme.colorScheme.background) // Use MaterialTheme for background color
     ) {
         // Temporary button to navigate back to the main menu
@@ -76,7 +76,7 @@ fun GameScreen(
             Text(
                 text = "Easy",
                 style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(start = 8.dp)
+                modifier = Modifier.padding(start = 32.dp)
             )
             Spacer(Modifier.weight(1f)) // Push the pause button to the end
             // Pause button - will pause timer, but cover the grid
@@ -91,6 +91,33 @@ fun GameScreen(
                 )
             }
         }
+
+        // Grid
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+            SudokuGrid(
+                grid = Array(9) { IntArray(9) { 0 } }, // Placeholder empty grid
+                notes = Array(9) { Array(9) { emptySet<Int>() } }, // Placeholder empty notes
+                selectedCell = null, // No cell selected initially
+                onCellClick = { row, col -> /* Handle cell click */ },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        Spacer(Modifier.height(2.dp))
+
+        // Input numbers row
+        InputRow(
+            modifier = Modifier.fillMaxWidth(),
+            input = List(9) { it + 1 },
+            onInputChange = { index, value ->
+                // Handle input change, e.g., update the selected number
+            },
+            selectedNumber = null // No number selected initially
+        )
     }
 }
 
