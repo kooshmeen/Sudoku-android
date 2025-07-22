@@ -129,12 +129,9 @@ fun GameScreen(
                 notes = Array(9) { row ->
                     Array(9) { col -> gameState.grid[row][col].notes }
                 },
-                selectedCell = gameState.selectedCell,
+                selectedCell = null, // No cell selection
                 onCellClick = { row, col ->
-                    gameState.selectCell(row, col)
-                    if (gameState.selectedNumber != null) {
-                        gameState.performAction()
-                    }
+                    gameState.inputToCell(row, col) // Direct input to cell
                 },
                 modifier = Modifier.fillMaxWidth()
             )
@@ -165,9 +162,6 @@ fun GameScreen(
             onInputChange = { index, value ->
                 val number = value.toInt()
                 gameState.selectNumber(number)
-                if (gameState.selectedCell != null) {
-                    gameState.performAction()
-                }
             },
             selectedNumber = gameState.selectedNumber
         )
@@ -180,8 +174,8 @@ fun GameScreen(
                 GameState.GameMode.ERASE -> "erase"
                 else -> null
             },
-            onEraseClick = { gameState.switchGameMode(GameState.GameMode.ERASE) },
-            onNotesClick = { gameState.switchGameMode(GameState.GameMode.NOTES) },
+            onEraseClick = { gameState.setEraseMode() },
+            onNotesClick = { gameState.toggleNotesMode() },
             onUndoClick = { gameState.undo() }
         )
     }

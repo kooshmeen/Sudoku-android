@@ -50,13 +50,6 @@ class GameState {
     }
 
     /**
-     * Select a cell on the grid
-     */
-    fun selectCell(row: Int, col: Int) {
-        selectedCell = Pair(row, col)
-    }
-
-    /**
      * Select a number from the input row
      */
     fun selectNumber(number: Int) {
@@ -64,19 +57,24 @@ class GameState {
     }
 
     /**
-     * Set the game mode (normal, notes, erase)
+     * Toggle the game mode between NORMAL and NOTES
      */
-    fun switchGameMode(mode: GameMode) {
-        gameMode = mode
+    fun toggleNotesMode() {
+        gameMode = if (gameMode == GameMode.NOTES) GameMode.NORMAL else GameMode.NOTES
     }
 
     /**
-     * Perform action on the currently selected cell based on current mode
+     * Set erase mode
      */
-    fun performAction() {
-        val cell = selectedCell ?: return
+    fun setEraseMode() {
+        gameMode = GameMode.ERASE
+    }
+
+    /**
+     * Input a number directly to a cell (no selection needed)
+     */
+    fun inputToCell(row: Int, col: Int) {
         val number = selectedNumber ?: return
-        val (row, col) = cell
 
         when (gameMode) {
             GameMode.NORMAL -> setValue(row, col, number)
