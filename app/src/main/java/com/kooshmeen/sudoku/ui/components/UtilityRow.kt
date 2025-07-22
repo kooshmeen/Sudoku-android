@@ -15,7 +15,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButtonDefaults.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -26,6 +25,9 @@ import com.kooshmeen.sudoku.R
 fun UtilityRow(
     modifier: Modifier = Modifier,
     selectedButton: String? = null,
+    onEraseClick: () -> Unit = {},
+    onNotesClick: () -> Unit = {},
+    onUndoClick: () -> Unit = {}
 ) {
     Row(
         modifier = modifier,
@@ -35,7 +37,7 @@ fun UtilityRow(
         // Erase Button
         IconToggleButton(
             checked = selectedButton == "erase",
-            onCheckedChange = { /* Handle erase mode */ },
+            onCheckedChange = { if (it) onEraseClick() },
             modifier = Modifier.weight(1f)
         ) {
             Icon (
@@ -48,7 +50,7 @@ fun UtilityRow(
         // Notes Button
         IconToggleButton(
             checked = selectedButton == "notes",
-            onCheckedChange = { /* Handle notes mode */ },
+            onCheckedChange = { if (it) onNotesClick() },
             modifier = Modifier.weight(1f)
         ) {
             Icon (
@@ -60,14 +62,13 @@ fun UtilityRow(
         }
         // Undo Button
         IconButton(
-            onClick = { /* Handle undo action */ },
+            onClick = onUndoClick,
             modifier = Modifier.weight(1f)
         ) {
             Icon (
                 painter = painterResource(id = R.drawable.undo_24dp_e3e3e3_fill0_wght400_grad0_opsz24),
                 contentDescription = "Undo",
-                tint = if (selectedButton == "undo") MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.onSurface
+                tint = MaterialTheme.colorScheme.onSurface
             )
         }
     }
