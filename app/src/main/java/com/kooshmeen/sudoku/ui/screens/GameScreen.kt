@@ -50,7 +50,23 @@ fun GameScreen(
             .padding(2.dp)
             .background(MaterialTheme.colorScheme.background) // Use MaterialTheme for background color
     ) {
-        // Temporary button to navigate back to the main menu
+        Row(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // Timer
+            Text(
+                text = "Elapsed: 00:00",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+            Spacer(Modifier.weight(1f)) // Push the difficulty indicator to the end
+            // Difficulty indicator
+            Text(
+                text = "Easy",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(start = 32.dp)
+            )
+        }
         Row(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -65,19 +81,6 @@ fun GameScreen(
                     tint = MaterialTheme.colorScheme.onBackground // Use MaterialTheme for icon color
                 )
             }
-            // Timer
-            Text(
-                text = "Elapsed: 00:00",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-            Spacer(Modifier.width(16.dp))
-            // Difficulty indicator
-            Text(
-                text = "Easy",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(start = 32.dp)
-            )
             Spacer(Modifier.weight(1f)) // Push the pause button to the end
             // Pause button - will pause timer, but cover the grid
             IconButton(
@@ -107,7 +110,7 @@ fun GameScreen(
             )
         }
 
-        Spacer(Modifier.height(2.dp))
+        Spacer(Modifier.height(256.dp))
 
         // Input numbers row
         InputRow(
