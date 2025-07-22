@@ -8,6 +8,7 @@ package com.kooshmeen.sudoku.data
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.kooshmeen.sudoku.utils.SudokuValidator
 import java.util.Locale
 import java.util.Stack
 
@@ -41,6 +42,10 @@ class GameState {
 
     // Game paused state
     var isPaused by mutableStateOf(false)
+        private set
+
+    // Error cells
+    var errorCells by mutableStateOf(emptySet<Pair<Int, Int>>())
         private set
 
     enum class GameMode {
@@ -109,12 +114,25 @@ class GameState {
         )
         actionHistory.push(action)
 
+        // Check for conflicts
+        val gridValues = Array(9) {r -> IntArray(9) { c -> grid[r][c].value } }
+        val hasConflict = !SudokuValidator.isValidMove(gridValues, row, col, value)
+
         // Update the cell
         val newGrid = grid.map { it.clone() }.toTypedArray()
         newGrid[row][col] = currentCell.copy(
             value = value,
-            notes = emptySet() // Clear notes when setting a value
+            notes = emptySet(), // Clear notes when setting a value
+            hasError = hasConflict
         )
+
+        // Update error cells
+        if (hasConflict) {
+            errorCells = errorCells + Pair(row, col)
+        } else {
+            errorCells = errorCells - Pair(row, col)
+        }
+
         grid = newGrid
     }
 
@@ -135,7 +153,7 @@ class GameState {
             actionHistory.push(action)
 
             newGrid[row][col] = currentCell.copy(
-                notes = currentCell.notes - note
+                notes = currentCell.notes - note,
             )
         } else {
             // Add note
@@ -143,7 +161,7 @@ class GameState {
             actionHistory.push(action)
 
             newGrid[row][col] = currentCell.copy(
-                notes = currentCell.notes + note
+                notes = currentCell.notes + note,
             )
         }
 
@@ -170,10 +188,7 @@ class GameState {
 
         // Clear the cell
         val newGrid = grid.map { it.clone() }.toTypedArray()
-        newGrid[row][col] = currentCell.copy(
-            value = 0,
-            notes = emptySet()
-        )
+        newGrid[row][col] = currentCell.copy()
         grid = newGrid
     }
 
@@ -190,25 +205,25 @@ class GameState {
             is GameAction.SetValue -> {
                 newGrid[action.row][action.col] = grid[action.row][action.col].copy(
                     value = action.oldValue,
-                    notes = action.oldNotes
+                    notes = action.oldNotes,
                 )
             }
             is GameAction.AddNote -> {
                 val currentCell = grid[action.row][action.col]
                 newGrid[action.row][action.col] = currentCell.copy(
-                    notes = currentCell.notes - action.note
+                    notes = currentCell.notes - action.note,
                 )
             }
             is GameAction.RemoveNote -> {
                 val currentCell = grid[action.row][action.col]
                 newGrid[action.row][action.col] = currentCell.copy(
-                    notes = currentCell.notes + action.note
+                    notes = currentCell.notes + action.note,
                 )
             }
             is GameAction.ClearCell -> {
                 newGrid[action.row][action.col] = grid[action.row][action.col].copy(
                     value = action.oldValue,
-                    notes = action.oldNotes
+                    notes = action.oldNotes,
                 )
             }
         }

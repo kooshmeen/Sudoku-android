@@ -29,12 +29,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-
 @Composable
 fun SudokuCell(
     value: Int, // 0 if empty
     notes: Set<Int> = emptySet(), // Notes 1-9 for empty cells
     isSelected: Boolean = false,
+    hasError: Boolean = false, // Not used here, but can be added for error state
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {}
 ) {
@@ -56,7 +56,8 @@ fun SudokuCell(
                 text = value.toString(),
                 fontSize = 30.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = if (hasError) MaterialTheme.colorScheme.error
+                        else MaterialTheme.colorScheme.onSurface,
             )
         } else if (notes.isNotEmpty()) {
             // Display notes in 3x3 mini-grid
@@ -68,26 +69,33 @@ fun SudokuCell(
 @Composable
 private fun NotesGrid(notes: Set<Int>) {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(0.dp), // Explicit zero padding
         verticalArrangement = Arrangement.SpaceEvenly
     ) {
         repeat(3) { row ->
             Row(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(0.dp), // Explicit zero padding
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 repeat(3) { col ->
                     val number = row * 3 + col + 1
                     Box(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(0.dp), // Explicit zero padding
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = if (notes.contains(number)) number.toString() else "",
-                            fontSize = 7.sp,
+                            fontSize = 6.sp, // Even smaller font size
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(0.dp) // No padding on text
                         )
                     }
                 }

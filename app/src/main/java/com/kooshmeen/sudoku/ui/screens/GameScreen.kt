@@ -123,15 +123,10 @@ fun GameScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             SudokuGrid(
-                grid = Array(9) { row ->
-                    IntArray(9) { col -> gameState.grid[row][col].value }
-                },
-                notes = Array(9) { row ->
-                    Array(9) { col -> gameState.grid[row][col].notes }
-                },
-                selectedCell = null, // No cell selection
+                grid = gameState.grid, // Pass the full SudokuCell grid instead of extracting values
+                selectedCell = null,
                 onCellClick = { row, col ->
-                    gameState.inputToCell(row, col) // Direct input to cell
+                    gameState.inputToCell(row, col)
                 },
                 modifier = Modifier.fillMaxWidth()
             )
