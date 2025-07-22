@@ -37,6 +37,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kooshmeen.sudoku.ui.components.InputRow
 import com.kooshmeen.sudoku.ui.components.SudokuGrid
+import com.kooshmeen.sudoku.ui.components.UtilityRow
 import com.kooshmeen.sudoku.ui.theme.SudokuTheme
 
 @Composable
@@ -124,7 +125,12 @@ fun GameScreen(
             },
             selectedNumber = selectedNumber
         )
+        Spacer(Modifier.height(24.dp))
         // Utility Row
+        UtilityRow(
+            modifier = Modifier.fillMaxWidth(),
+            selectedButton = null
+        )
     }
 }
 
