@@ -1,11 +1,16 @@
 /**
-* Game Screen for the Sudoku Game
-* This screen displays the Sudoku grid and allows users to play the game.
+ * Game Screen for the Sudoku Game
+ * This screen displays the Sudoku grid and allows users to play the game.
+ * Includes a timer from the start of the game, a difficulty indicator,
+ * a back button to return to the main menu, and a pause button - which pauses the timer
+ * and covers the grid.
+ *
+ * The grid is displayed using a SudokuGrid composable, and the input numbers are handled by an InputRow composable.
+ * Below is a UtilityRow composable.
 */
 
 package com.kooshmeen.sudoku.ui.screens
 
-import android.renderscript.ScriptGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +20,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
@@ -31,10 +35,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.kooshmeen.sudoku.ui.components.InputRow
 import com.kooshmeen.sudoku.ui.components.SudokuGrid
 import com.kooshmeen.sudoku.ui.theme.SudokuTheme
-import com.kooshmeen.sudoku.ui.*
-import com.kooshmeen.sudoku.ui.components.InputRow
 
 @Composable
 fun GameScreen(
@@ -94,7 +97,7 @@ fun GameScreen(
                 )
             }
         }
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(96.dp))
         // Grid
         Box(
             modifier = Modifier
@@ -109,7 +112,7 @@ fun GameScreen(
             )
         }
 
-        Spacer(Modifier.height(196.dp))
+        Spacer(Modifier.height(96.dp))
 
         // Input numbers row
         InputRow(
@@ -121,6 +124,7 @@ fun GameScreen(
             },
             selectedNumber = selectedNumber
         )
+        // Utility Row
     }
 }
 

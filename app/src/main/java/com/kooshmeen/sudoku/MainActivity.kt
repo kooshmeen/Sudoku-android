@@ -1,3 +1,8 @@
+/**
+ * MainActivity.kt
+ * This file defines the main entry point for the Sudoku app.
+ */
+
 package com.kooshmeen.sudoku
 
 import android.os.Bundle
@@ -7,20 +12,17 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.kooshmeen.sudoku.ui.theme.SudokuTheme
 import com.kooshmeen.sudoku.ui.screens.GameScreen
 import com.kooshmeen.sudoku.ui.screens.MainMenu
-import androidx.navigation.compose.composable
+import com.kooshmeen.sudoku.ui.theme.SudokuTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
