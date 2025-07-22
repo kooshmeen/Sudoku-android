@@ -174,7 +174,7 @@ fun GameScreen(
                 GameState.GameMode.ERASE -> "erase"
                 else -> null
             },
-            onEraseClick = { gameState.setEraseMode() },
+            onEraseClick = { gameState.toggleEraseMode() },
             onNotesClick = { gameState.toggleNotesMode() },
             onUndoClick = { gameState.undo() }
         )

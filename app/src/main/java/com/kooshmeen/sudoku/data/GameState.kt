@@ -64,6 +64,13 @@ class GameState {
     }
 
     /**
+     * Toggle erase mode on/off
+     */
+    fun toggleEraseMode() {
+        gameMode = if (gameMode == GameMode.ERASE) GameMode.NORMAL else GameMode.ERASE
+    }
+
+    /**
      * Set erase mode
      */
     fun setEraseMode() {
