@@ -43,7 +43,7 @@ fun InputRow(
     ) {
         for (index in input.indices) {
             val number = input[index]
-            var isSelected = selectedNumber == number
+            val isSelected: Boolean = (selectedNumber == number)
 
             Box(
                 modifier = Modifier
@@ -55,7 +55,7 @@ fun InputRow(
                     )
                     .clickable {
                         onInputChange(index, number.toString())
-                        isSelected = !isSelected // Toggle selection
+                        // Remove local state toggle - handled in parent
                     }
                     .border(
                         width = if (isSelected) 9.dp else 3.dp,
@@ -63,7 +63,6 @@ fun InputRow(
                         else MaterialTheme.colorScheme.outline
                     )
                     .padding(8.dp),
-
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -77,14 +76,13 @@ fun InputRow(
         }
     }
 }
-
 @Preview
 @Composable
 fun InputRowPreview() {
     InputRow(
         input = List(9) { it + 1 },
         onInputChange = { index, value -> /* Handle input change */ },
-        selectedNumber = null,
+        selectedNumber = 3,
         modifier = Modifier
     )
 }

@@ -94,9 +94,8 @@ fun GameScreen(
                 )
             }
         }
-
+        Spacer(Modifier.height(32.dp))
         // Grid
-
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -110,16 +109,17 @@ fun GameScreen(
             )
         }
 
-        Spacer(Modifier.height(256.dp))
+        Spacer(Modifier.height(196.dp))
 
         // Input numbers row
         InputRow(
             modifier = Modifier.fillMaxWidth(),
             input = List(9) { it + 1 },
             onInputChange = { index, value ->
-                // Handle input change, e.g., update the selected number
+                val number = value.toInt()
+                selectedNumber = number
             },
-            selectedNumber = null // No number selected initially
+            selectedNumber = selectedNumber
         )
     }
 }
