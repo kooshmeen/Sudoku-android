@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kooshmeen.sudoku.data.GameState
+import com.kooshmeen.sudoku.data.GameStateManager
 import com.kooshmeen.sudoku.ui.components.InputRow
 import com.kooshmeen.sudoku.ui.components.SudokuGrid
 import com.kooshmeen.sudoku.ui.components.UtilityRow
@@ -51,7 +52,7 @@ fun GameScreen(
     isDarkTheme: Boolean = true, // Default value for dark theme
     onNavigateToMenu: () -> Unit = { /* Default no-op */ }
 ) {
-    val gameState = remember { GameState() }
+    val gameState = GameStateManager.gameState
 
     // Timer effect
     LaunchedEffect(gameState.isPaused) {
@@ -59,11 +60,6 @@ fun GameScreen(
             delay(1000)
             gameState.updateTimer()
         }
-    }
-
-    // Initialize game on first load
-    LaunchedEffect(Unit) {
-        gameState.startNewGame("Easy")
     }
 
     Column(

@@ -48,6 +48,14 @@ class GameState {
     var errorCells by mutableStateOf(emptySet<Pair<Int, Int>>())
         private set
 
+    // Game active state
+    var isGameActive by mutableStateOf(false)
+        private set
+
+    // Game completed state
+    var isGameCompleted by mutableStateOf(false)
+        private set
+
     enum class GameMode {
         NORMAL,    // Place numbers
         NOTES,     // Add/remove notes
@@ -232,6 +240,29 @@ class GameState {
     }
 
     /**
+     * Check if there's an active game in progress
+     */
+    fun hasActiveGame(): Boolean {
+        return isGameActive && !isGameCompleted
+    }
+
+    /**
+     * Check if the game is completed
+     */
+    fun isGameComplete(): Boolean {
+        // Check if all cells are filled and there are no errors
+        for (row in 0..8) {
+            for (col in 0..8) {
+                val cell = grid[row][col]
+                if (cell.isEmpty || cell.hasError) {
+                    return false
+                }
+            }
+        }
+        return true
+    }
+
+    /**
      * Initialize a new game with the given difficulty
      */
     fun startNewGame(difficulty: String) {
@@ -242,10 +273,31 @@ class GameState {
         this.selectedNumber = null
         this.gameMode = GameMode.NORMAL
         this.actionHistory.clear()
+        this.isGameActive = true
+        this.isGameCompleted = false
+        this.errorCells = emptySet()
 
         // Initialize with empty grid for now
         // TODO: Generate puzzle based on difficulty
         grid = Array(9) { Array(9) { SudokuCell() } }
+    }
+
+    /**
+     * Continue an existing game
+     */
+    fun continueGame() {
+        this.isPaused = false
+        this.selectedCell = null
+        this.selectedNumber = null
+        this.gameMode = GameMode.NORMAL
+    }
+
+    /**
+     * End the current game
+     */
+    fun endGame() {
+        this.isGameActive = false
+        this.isGameCompleted = isGameComplete()
     }
 
     /**
