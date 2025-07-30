@@ -15,7 +15,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -84,14 +86,20 @@ private fun NotesGrid(notes: Set<Int>, selectedNumber: Int?) {
         modifier = Modifier
             .fillMaxSize()
             .padding(0.dp), // Explicit zero padding
-        verticalArrangement = Arrangement.SpaceEvenly
+        verticalArrangement = Arrangement.SpaceAround
     ) {
         repeat(3) { row ->
             Row(
                 modifier = Modifier
-                    .weight(1f)
+                    .fillMaxHeight(
+                        when (row) {
+                            0 -> 1f/3f
+                            1 -> 1f/2f
+                            else -> 1f
+                        }
+                    )
                     .padding(0.dp), // Explicit zero padding
-                horizontalArrangement = Arrangement.SpaceEvenly,
+                horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 repeat(3) { col ->
@@ -99,13 +107,20 @@ private fun NotesGrid(notes: Set<Int>, selectedNumber: Int?) {
                     val isBold = selectedNumber == number
                     Box(
                         modifier = Modifier
-                            .weight(1f)
+                            .fillMaxHeight()
+                            .fillMaxWidth(
+                                when (col) {
+                                    0 -> 1f/3f
+                                    1 -> 1f/2f
+                                    else -> 1f
+                                }
+                            )
                             .padding(0.dp), // Explicit zero padding
-                        contentAlignment = Alignment.TopCenter
+                        contentAlignment = Alignment.TopCenter,
                     ) {
                         Text(
                             text = if (notes.contains(number)) number.toString() else "",
-                            fontSize = 9.sp,
+                            fontSize = 8.sp,
                             fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                             textAlign = TextAlign.Center,

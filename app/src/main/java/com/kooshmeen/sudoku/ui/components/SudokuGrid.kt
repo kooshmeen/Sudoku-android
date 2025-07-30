@@ -43,6 +43,7 @@ fun SudokuGrid(
                         notes = cell.notes,
                         isSelected = selectedCell == Pair(row, col),
                         isOriginal = cell.isOriginal,
+                        selectedNumber = selectedNumber, // Pass selectedNumber here
                         hasError = cell.hasError,
                         isHighlighted = isHighlighted, // Pass highlight flag
                         onClick = { onCellClick(row, col) },
@@ -100,6 +101,7 @@ fun SudokuGridPreview() {
         grid = sampleGrid,
         selectedCell = Pair(0, 0),
         onCellClick = { row, col -> println("Cell clicked: ($row, $col)") },
+        selectedNumber = 4,
         modifier = Modifier.fillMaxSize()
     )
 }
