@@ -4,7 +4,6 @@
  * Handles visual states like selection and borders for 3x3 box separation.
  */
 
-
 package com.kooshmeen.sudoku.ui.components
 
 import androidx.compose.foundation.background

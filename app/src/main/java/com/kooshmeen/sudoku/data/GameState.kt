@@ -134,6 +134,39 @@ class GameState {
             hasError = hasConflict
         )
 
+        // Remove notes of this value in row, column, and box
+        // Remove from row
+        for (c in 0..8) {
+            if (c != col) {
+                val cell = newGrid[row][c]
+                if (cell.notes.contains(value)) {
+                    newGrid[row][c] = cell.copy(notes = cell.notes - value)
+                }
+            }
+        }
+        // Remove from column
+        for (r in 0..8) {
+            if (r != row) {
+                val cell = newGrid[r][col]
+                if (cell.notes.contains(value)) {
+                    newGrid[r][col] = cell.copy(notes = cell.notes - value)
+                }
+            }
+        }
+        // Remove from box
+        val boxRow = (row / 3) * 3
+        val boxCol = (col / 3) * 3
+        for (r in boxRow until boxRow + 3) {
+            for (c in boxCol until boxCol + 3) {
+                if ((r != row || c != col)) {
+                    val cell = newGrid[r][c]
+                    if (cell.notes.contains(value)) {
+                        newGrid[r][c] = cell.copy(notes = cell.notes - value)
+                    }
+                }
+            }
+        }
+
         // Update error cells
         if (hasConflict) {
             errorCells = errorCells + Pair(row, col)
