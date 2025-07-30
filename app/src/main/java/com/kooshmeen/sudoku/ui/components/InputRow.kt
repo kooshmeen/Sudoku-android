@@ -31,6 +31,7 @@ fun InputRow(
     input: List<Int>,
     onInputChange: (Int, String) -> Unit,
     selectedNumber: Int? = null,
+    disabledNumbers: List<Int> = emptyList(), // New parameter
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -41,21 +42,24 @@ fun InputRow(
         for (index in input.indices) {
             val number = input[index]
             val isSelected: Boolean = (selectedNumber == number)
+            val isDisabled: Boolean = disabledNumbers.contains(number)
 
             Box(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .background(
-                        if (isSelected) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.surface
+                        when {
+                            isDisabled -> MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
+                            isSelected -> MaterialTheme.colorScheme.primary
+                            else -> MaterialTheme.colorScheme.surface
+                        }
                     )
-                    .clickable {
+                    .clickable(enabled = !isDisabled) {
                         onInputChange(index, number.toString())
-                        // Remove local state toggle - handled in parent
                     }
                     .border(
-                        width = if (isSelected) 9.dp else 3.dp,
+                        width = if (isSelected) 9.dp else if (!isDisabled) 3.dp else 0.dp,
                         color = if (isSelected) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.outline
                     )
@@ -64,8 +68,11 @@ fun InputRow(
             ) {
                 Text(
                     text = number.toString(),
-                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary
-                    else MaterialTheme.colorScheme.onSurface,
+                    color = when {
+                        isDisabled -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                        isSelected -> MaterialTheme.colorScheme.onPrimary
+                        else -> MaterialTheme.colorScheme.onSurface
+                    },
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleLarge
                 )
@@ -73,6 +80,7 @@ fun InputRow(
         }
     }
 }
+
 @Preview
 @Composable
 fun InputRowPreview() {
@@ -80,6 +88,7 @@ fun InputRowPreview() {
         input = List(9) { it + 1 },
         onInputChange = { index, value -> /* Handle input change */ },
         selectedNumber = 3,
+        disabledNumbers = listOf(2, 4, 6), // Example disabled numbers
         modifier = Modifier
     )
 }

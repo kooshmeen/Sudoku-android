@@ -23,10 +23,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kooshmeen.sudoku.data.GameState
+import com.kooshmeen.sudoku.data.GameStateManager
 import com.kooshmeen.sudoku.ui.components.InputRow
 import com.kooshmeen.sudoku.ui.components.SudokuGrid
 import com.kooshmeen.sudoku.ui.components.UtilityRow
@@ -51,25 +55,28 @@ fun GameScreen(
     isDarkTheme: Boolean = true, // Default value for dark theme
     onNavigateToMenu: () -> Unit = { /* Default no-op */ }
 ) {
-    val gameState = remember { GameState() }
+    val gameState = GameStateManager.gameState
+    var showCompletionDialog by remember { mutableStateOf(false) }
 
-    // Timer effect
-    LaunchedEffect(gameState.isPaused) {
-        while (true) {
+    // Timer effect - only run when game is active and not paused
+    LaunchedEffect(gameState.isGameActive, gameState.isPaused) {
+        while (gameState.isGameActive && !gameState.isPaused) {
             delay(1000)
             gameState.updateTimer()
         }
     }
 
-    // Initialize game on first load
-    LaunchedEffect(Unit) {
-        gameState.startNewGame("Easy")
+    // Check for game completion
+    LaunchedEffect(gameState.isGameCompleted) {
+        if (gameState.isGameCompleted) {
+            showCompletionDialog = true
+        }
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(2.dp)
+            .padding(12.dp)
             .background(MaterialTheme.colorScheme.background) // Use MaterialTheme for background color
     ) {
         Row(
@@ -123,18 +130,11 @@ fun GameScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             SudokuGrid(
-                grid = Array(9) { row ->
-                    IntArray(9) { col -> gameState.grid[row][col].value }
-                },
-                notes = Array(9) { row ->
-                    Array(9) { col -> gameState.grid[row][col].notes }
-                },
-                selectedCell = gameState.selectedCell,
+                grid = gameState.grid,
+                selectedCell = null,
+                selectedNumber = gameState.selectedNumber, // Pass selectedNumber
                 onCellClick = { row, col ->
-                    gameState.selectCell(row, col)
-                    if (gameState.selectedNumber != null) {
-                        gameState.performAction()
-                    }
+                    gameState.inputToCell(row, col)
                 },
                 modifier = Modifier.fillMaxWidth()
             )
@@ -144,7 +144,7 @@ fun GameScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)),
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 1f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -158,18 +158,29 @@ fun GameScreen(
 
         Spacer(Modifier.height(96.dp))
 
+        // Compute which numbers are disabled (already filled in all spots)
+        val numberCounts = IntArray(9) { 0 }
+        for (row in gameState.grid) {
+            for (cell in row) {
+                if (cell.value in 1..9) {
+                    numberCounts[cell.value - 1]++
+                }
+            }
+        }
+        val disabledNumbers = numberCounts.mapIndexed { idx, count -> if (count >= 9) idx + 1 else null }.filterNotNull()
+
         // Input numbers row
         InputRow(
             modifier = Modifier.fillMaxWidth(),
             input = List(9) { it + 1 },
             onInputChange = { index, value ->
                 val number = value.toInt()
-                gameState.selectNumber(number)
-                if (gameState.selectedCell != null) {
-                    gameState.performAction()
+                if (!disabledNumbers.contains(number)) {
+                    gameState.selectNumber(number)
                 }
             },
-            selectedNumber = gameState.selectedNumber
+            selectedNumber = gameState.selectedNumber,
+            disabledNumbers = disabledNumbers // Pass disabled numbers
         )
         Spacer(Modifier.height(24.dp))
         // Utility Row
@@ -180,10 +191,46 @@ fun GameScreen(
                 GameState.GameMode.ERASE -> "erase"
                 else -> null
             },
-            onEraseClick = { gameState.switchGameMode(GameState.GameMode.ERASE) },
-            onNotesClick = { gameState.switchGameMode(GameState.GameMode.NOTES) },
+            onEraseClick = { gameState.toggleEraseMode() },
+            onNotesClick = { gameState.toggleNotesMode() },
             onUndoClick = { gameState.undo() }
         )
+
+        // Completion Dialog
+        if (showCompletionDialog) {
+            GameStateManager.endGame()
+            AlertDialog(
+                onDismissRequest = {
+                    showCompletionDialog = false
+                    GameStateManager.endGame()
+                },
+                title = { Text("Congratulations!") },
+                text = {
+                    Text("You completed the ${gameState.difficulty} puzzle in ${gameState.getFormattedTime()}!")
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showCompletionDialog = false
+                            GameStateManager.endGame()
+                            onNavigateToMenu()
+                        }
+                    ) {
+                        Text("Back to Menu")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            showCompletionDialog = false
+                            GameStateManager.endGame()
+                        }
+                    ) {
+                        Text("Stay Here")
+                    }
+                }
+            )
+        }
     }
 }
 
@@ -195,7 +242,8 @@ fun GameScreenPreview() {
     SudokuTheme(darkTheme = isDarkTheme) {
         GameScreen(
             isDarkTheme = isDarkTheme,
-            onThemeToggle = { isDarkTheme = it }
+            onThemeToggle = { isDarkTheme = it },
+
         )
     }
 }

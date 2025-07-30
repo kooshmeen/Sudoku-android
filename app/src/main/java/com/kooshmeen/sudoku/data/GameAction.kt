@@ -32,4 +32,10 @@ sealed class GameAction {
         val oldValue: Int,
         val oldNotes: Set<Int>
     ) : GameAction()
+
+    data class RemoveNotesBatch(
+        val cells: List<Pair<Int, Int>>,
+        val note: Int,
+        val oldNotes: List<Set<Int>>
+    ) : GameAction()
 }

@@ -37,7 +37,7 @@ fun UtilityRow(
         // Erase Button
         IconToggleButton(
             checked = selectedButton == "erase",
-            onCheckedChange = { if (it) onEraseClick() },
+            onCheckedChange = { onEraseClick() }, // Always call onEraseClick, let GameState handle toggle
             modifier = Modifier.weight(1f)
         ) {
             Icon (
@@ -50,7 +50,7 @@ fun UtilityRow(
         // Notes Button
         IconToggleButton(
             checked = selectedButton == "notes",
-            onCheckedChange = { if (it) onNotesClick() },
+            onCheckedChange = { onNotesClick() }, // Always call onNotesClick, let GameState handle toggle
             modifier = Modifier.weight(1f)
         ) {
             Icon (

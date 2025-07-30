@@ -44,6 +44,12 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToGame = {
                                     NavController.navigate("game_screen")
                                 },
+                                onContinueGame = {
+                                    NavController.navigate("game_screen")
+                                },
+                                onStartNewGame = { difficulty ->
+                                    NavController.navigate("game_screen")
+                                },
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(innerPadding),

@@ -8,6 +8,7 @@ package com.kooshmeen.sudoku.data
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.kooshmeen.sudoku.utils.SudokuValidator
 import java.util.Locale
 import java.util.Stack
 
@@ -43,17 +44,25 @@ class GameState {
     var isPaused by mutableStateOf(false)
         private set
 
+    // Error cells
+    var errorCells by mutableStateOf(emptySet<Pair<Int, Int>>())
+        private set
+
+    // Game active state
+    var isGameActive by mutableStateOf(false)
+        private set
+
+    // Game completed state
+    var isGameCompleted by mutableStateOf(false)
+        private set
+
+    // Store the original solution grid for error checking
+    private var solutionGrid: Array<IntArray> = Array(9) { IntArray(9) }
+
     enum class GameMode {
         NORMAL,    // Place numbers
         NOTES,     // Add/remove notes
         ERASE      // Clear cells
-    }
-
-    /**
-     * Select a cell on the grid
-     */
-    fun selectCell(row: Int, col: Int) {
-        selectedCell = Pair(row, col)
     }
 
     /**
@@ -64,19 +73,31 @@ class GameState {
     }
 
     /**
-     * Set the game mode (normal, notes, erase)
+     * Toggle the game mode between NORMAL and NOTES
      */
-    fun switchGameMode(mode: GameMode) {
-        gameMode = mode
+    fun toggleNotesMode() {
+        gameMode = if (gameMode == GameMode.NOTES) GameMode.NORMAL else GameMode.NOTES
     }
 
     /**
-     * Perform action on the currently selected cell based on current mode
+     * Toggle erase mode on/off
      */
-    fun performAction() {
-        val cell = selectedCell ?: return
+    fun toggleEraseMode() {
+        gameMode = if (gameMode == GameMode.ERASE) GameMode.NORMAL else GameMode.ERASE
+    }
+
+    /**
+     * Set erase mode
+     */
+    fun setEraseMode() {
+        gameMode = GameMode.ERASE
+    }
+
+    /**
+     * Input a number directly to a cell (no selection needed)
+     */
+    fun inputToCell(row: Int, col: Int) {
         val number = selectedNumber ?: return
-        val (row, col) = cell
 
         when (gameMode) {
             GameMode.NORMAL -> setValue(row, col, number)
@@ -90,11 +111,7 @@ class GameState {
      */
     private fun setValue(row: Int, col: Int, value: Int) {
         val currentCell = grid[row][col]
-
-        // Don't allow modifying original puzzle cells
         if (currentCell.isOriginal) return
-
-        // Create action for undo
         val action = GameAction.SetValue(
             row = row,
             col = col,
@@ -103,14 +120,67 @@ class GameState {
             oldNotes = currentCell.notes
         )
         actionHistory.push(action)
-
-        // Update the cell
-        val newGrid = grid.map { it.clone() }.toTypedArray()
+        val newGrid = Array(9) { r -> Array(9) { c -> grid[r][c] } }
+        // Error: compare to solutionGrid
+        val hasError = solutionGrid[row][col] != value
         newGrid[row][col] = currentCell.copy(
             value = value,
-            notes = emptySet() // Clear notes when setting a value
+            notes = emptySet(),
+            hasError = hasError
         )
+        // Track cells and old notes for undo
+        val affectedCells = mutableListOf<Pair<Int, Int>>()
+        val affectedOldNotes = mutableListOf<Set<Int>>()
+        // Remove notes of this value in row
+        for (c in 0..8) {
+            if (c != col) {
+                val cell = newGrid[row][c]
+                if (cell.notes.contains(value)) {
+                    affectedCells.add(Pair(row, c))
+                    affectedOldNotes.add(cell.notes)
+                    newGrid[row][c] = cell.copy(notes = cell.notes - value)
+                }
+            }
+        }
+        // Remove from column
+        for (r in 0..8) {
+            if (r != row) {
+                val cell = newGrid[r][col]
+                if (cell.notes.contains(value)) {
+                    affectedCells.add(Pair(r, col))
+                    affectedOldNotes.add(cell.notes)
+                    newGrid[r][col] = cell.copy(notes = cell.notes - value)
+                }
+            }
+        }
+        // Remove from box
+        val boxRow = (row / 3) * 3
+        val boxCol = (col / 3) * 3
+        for (r in boxRow until boxRow + 3) {
+            for (c in boxCol until boxCol + 3) {
+                if ((r != row || c != col)) {
+                    val cell = newGrid[r][c]
+                    if (cell.notes.contains(value)) {
+                        affectedCells.add(Pair(r, c))
+                        affectedOldNotes.add(cell.notes)
+                        newGrid[r][c] = cell.copy(notes = cell.notes - value)
+                    }
+                }
+            }
+        }
+        // Push batch note removal to action stack for undo
+        if (affectedCells.isNotEmpty()) {
+            actionHistory.push(GameAction.RemoveNotesBatch(affectedCells, value, affectedOldNotes))
+        }
+        if (hasError) {
+            errorCells = errorCells + Pair(row, col)
+        } else {
+            errorCells = errorCells - Pair(row, col)
+        }
         grid = newGrid
+        if (isGameComplete()) {
+            isGameCompleted = true
+        }
     }
 
     /**
@@ -122,7 +192,7 @@ class GameState {
         // Only allow notes in empty cells
         if (currentCell.isFilled || currentCell.isOriginal) return
 
-        val newGrid = grid.map { it.clone() }.toTypedArray()
+        val newGrid = Array(9) { r -> Array(9) { c -> grid[r][c] } }
 
         if (currentCell.notes.contains(note)) {
             // Remove note
@@ -130,7 +200,7 @@ class GameState {
             actionHistory.push(action)
 
             newGrid[row][col] = currentCell.copy(
-                notes = currentCell.notes - note
+                notes = currentCell.notes - note,
             )
         } else {
             // Add note
@@ -138,7 +208,7 @@ class GameState {
             actionHistory.push(action)
 
             newGrid[row][col] = currentCell.copy(
-                notes = currentCell.notes + note
+                notes = currentCell.notes + note,
             )
         }
 
@@ -164,11 +234,8 @@ class GameState {
         actionHistory.push(action)
 
         // Clear the cell
-        val newGrid = grid.map { it.clone() }.toTypedArray()
-        newGrid[row][col] = currentCell.copy(
-            value = 0,
-            notes = emptySet()
-        )
+        val newGrid = Array(9) { r -> Array(9) { c -> grid[r][c] } }
+        newGrid[row][col] = SudokuCell() // Create a new empty cell
         grid = newGrid
     }
 
@@ -179,36 +246,67 @@ class GameState {
         if (actionHistory.isEmpty()) return
 
         val action = actionHistory.pop()
-        val newGrid = grid.map { it.clone() }.toTypedArray()
+        val newGrid = Array(9) { r -> Array(9) { c -> grid[r][c] } }
 
         when (action) {
             is GameAction.SetValue -> {
                 newGrid[action.row][action.col] = grid[action.row][action.col].copy(
                     value = action.oldValue,
-                    notes = action.oldNotes
+                    notes = action.oldNotes,
+                    hasError = false
                 )
             }
             is GameAction.AddNote -> {
                 val currentCell = grid[action.row][action.col]
                 newGrid[action.row][action.col] = currentCell.copy(
-                    notes = currentCell.notes - action.note
+                    notes = currentCell.notes - action.note,
                 )
             }
             is GameAction.RemoveNote -> {
                 val currentCell = grid[action.row][action.col]
                 newGrid[action.row][action.col] = currentCell.copy(
-                    notes = currentCell.notes + action.note
+                    notes = currentCell.notes + action.note,
                 )
             }
             is GameAction.ClearCell -> {
-                newGrid[action.row][action.col] = grid[action.row][action.col].copy(
+                newGrid[action.row][action.col] = SudokuCell(
                     value = action.oldValue,
-                    notes = action.oldNotes
+                    notes = action.oldNotes,
+                    isOriginal = grid[action.row][action.col].isOriginal
                 )
+            }
+            is GameAction.RemoveNotesBatch -> {
+                action.cells.forEachIndexed { idx, (row, col) ->
+                    val cell = grid[row][col]
+                    newGrid[row][col] = cell.copy(notes = action.oldNotes[idx])
+                }
             }
         }
 
         grid = newGrid
+    }
+
+    /**
+     * Check if there's an active game in progress
+     */
+    fun hasActiveGame(): Boolean {
+        return isGameActive && !isGameCompleted
+    }
+
+    /**
+     * Check if the game is completed
+     */
+    fun isGameComplete(): Boolean {
+        // Check if all cells are filled and there are no errors
+        for (row in 0..8) {
+            for (col in 0..8) {
+                val cell = grid[row][col]
+                if (cell.isEmpty || cell.hasError) {
+                    return false
+                }
+            }
+        }
+        return true
     }
 
     /**
@@ -222,10 +320,33 @@ class GameState {
         this.selectedNumber = null
         this.gameMode = GameMode.NORMAL
         this.actionHistory.clear()
+        this.isGameActive = true
+        this.isGameCompleted = false
+        this.errorCells = emptySet()
 
-        // Initialize with empty grid for now
-        // TODO: Generate puzzle based on difficulty
-        grid = Array(9) { Array(9) { SudokuCell() } }
+        // Generate a new puzzle and store the solution grid
+        val generator = SudokuGenerator()
+        val completeGrid = generator.generateCompleteGrid()
+        solutionGrid = completeGrid.map { it.clone() }.toTypedArray()
+        grid = generator.createPuzzleWithUniquenessCheck(completeGrid, difficulty)
+    }
+
+    /**
+     * Continue an existing game
+     */
+    fun continueGame() {
+        this.isPaused = false
+        this.selectedCell = null
+        this.selectedNumber = null
+        this.gameMode = GameMode.NORMAL
+    }
+
+    /**
+     * End the current game
+     */
+    fun endGame() {
+        this.isGameActive = false
+        this.isGameCompleted = isGameComplete()
     }
 
     /**
@@ -239,7 +360,7 @@ class GameState {
      * Update timer (call this every second when game is not paused)
      */
     fun updateTimer() {
-        if (!isPaused) {
+        if (!isPaused && isGameActive) {
             elapsedTimeSeconds++
         }
     }

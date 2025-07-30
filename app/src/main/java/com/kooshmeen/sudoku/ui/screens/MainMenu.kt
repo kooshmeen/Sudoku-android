@@ -43,6 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kooshmeen.sudoku.R
+import com.kooshmeen.sudoku.data.GameStateManager
 import com.kooshmeen.sudoku.ui.theme.SudokuTheme
 
 @Composable
@@ -50,10 +51,13 @@ fun MainMenu (
     modifier: Modifier = Modifier,
     onThemeToggle: (Boolean) -> Unit = { /* Default no-op */ },
     isDarkTheme: Boolean = true, // Default value for dark theme
-    onNavigateToGame: () -> Unit = { /* Default no-op */ }
+    onNavigateToGame: () -> Unit = { /* Default no-op */ },
+    onContinueGame: () -> Unit = { /* Default no-op */ },
+    onStartNewGame: (String) -> Unit = { /* Default no-op */ }
 ) {
     var isDifficultyDropdownOpen by remember { mutableStateOf(false) }
     var selectedDifficulty by remember { mutableStateOf("Easy") }
+    val hasActiveGame = GameStateManager.hasActiveGame()
 
     Column (
         modifier = Modifier
@@ -106,15 +110,38 @@ fun MainMenu (
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
         Spacer(modifier = Modifier.height(256.dp))
-        // Play button - start game if no game started
+
+        // Continue game button - only show if there's an active game
+        if (hasActiveGame) {
+            Button(
+                onClick = {
+                    GameStateManager.continueGame()
+                    onContinueGame()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Text(
+                    text = "Continue Game",
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
+        // Start new game button
         Button(
-            onClick = { onNavigateToGame() },
+            onClick = {
+                GameStateManager.startNewGame(selectedDifficulty)
+                onStartNewGame(selectedDifficulty)
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
         ) {
             Text(
-                text = "Start Game",
+                text = if (hasActiveGame) "New Game" else "Start Game",
                 color = MaterialTheme.colorScheme.onPrimary,
             )
         }

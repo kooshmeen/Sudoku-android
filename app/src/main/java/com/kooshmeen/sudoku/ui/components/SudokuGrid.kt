@@ -18,27 +18,34 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.kooshmeen.sudoku.data.SudokuCell
 
 @Composable
 fun SudokuGrid(
-    grid: Array<IntArray>, // 9x9 array, 0 = empty
-    notes: Array<Array<Set<Int>>> = Array(9) { Array(9) { emptySet() } },
+    grid: Array<Array<SudokuCell>>, // Change from Array<IntArray> to Array<Array<SudokuCell>>
     selectedCell: Pair<Int, Int>? = null,
+    selectedNumber: Int? = null, // Add selectedNumber
     onCellClick: (Int, Int) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
             .aspectRatio(1f)
-            .border(2.dp, MaterialTheme.colorScheme.outline) // Outer border
+            .border(2.dp, MaterialTheme.colorScheme.outline)
     ) {
         repeat(9) { row ->
             Row {
                 repeat(9) { col ->
+                    val cell = grid[row][col]
+                    val isHighlighted = selectedNumber != null && cell.value == selectedNumber
                     SudokuCell(
-                        value = grid[row][col],
-                        notes = notes[row][col],
+                        value = cell.value,
+                        notes = cell.notes,
                         isSelected = selectedCell == Pair(row, col),
+                        isOriginal = cell.isOriginal,
+                        selectedNumber = selectedNumber, // Pass selectedNumber here
+                        hasError = cell.hasError,
+                        isHighlighted = isHighlighted, // Pass highlight flag
                         onClick = { onCellClick(row, col) },
                         modifier = Modifier
                             .weight(1f)
@@ -83,21 +90,18 @@ private fun getBoxBorderModifier(row: Int, col: Int): Modifier {
 @Preview(showBackground = true)
 @Composable
 fun SudokuGridPreview() {
-    val sampleGrid = Array(9) { IntArray(9) { 0 } }
-    sampleGrid[0][0] = 5
-    sampleGrid[1][1] = 3
-    sampleGrid[4][4] = 7
-
-    val sampleNotes = Array(9) { Array(9) { emptySet<Int>() } }
-    sampleNotes[0][1] = setOf(1, 2, 3)
-    sampleNotes[1][0] = setOf(4, 5)
-    sampleNotes[3][3] = setOf(6, 8, 9)
+    val sampleGrid = Array(9) { Array(9) { SudokuCell() } }
+    sampleGrid[0][0] = SudokuCell(value = 5)
+    sampleGrid[1][1] = SudokuCell(value = 3)
+    sampleGrid[4][4] = SudokuCell(value = 7)
+    sampleGrid[3][0] = SudokuCell(value = 5, hasError = true)
+    sampleGrid[0][1] = SudokuCell(notes = setOf(1, 2, 3, 4, 5, 6, 7, 8, 9))
 
     SudokuGrid(
         grid = sampleGrid,
-        notes = sampleNotes,
         selectedCell = Pair(0, 0),
         onCellClick = { row, col -> println("Cell clicked: ($row, $col)") },
+        selectedNumber = 4,
         modifier = Modifier.fillMaxSize()
     )
 }
