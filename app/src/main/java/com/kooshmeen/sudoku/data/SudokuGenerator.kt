@@ -25,7 +25,7 @@ class SudokuGenerator {
         fun generatePuzzle(difficulty: String): Array<Array<SudokuCell>> {
             val generator = SudokuGenerator()
             val completeGrid = generator.generateCompleteGrid()
-            val puzzle = generator.createPuzzle(completeGrid, difficulty)
+            val puzzle = generator.createPuzzleWithUniquenessCheck(completeGrid, difficulty)
             return puzzle
         }
     }
@@ -158,9 +158,55 @@ class SudokuGenerator {
     }
 
     /**
-     * Create a puzzle by removing numbers from the complete grid
+     * Checks if the given puzzle has a unique solution
      */
-    private fun createPuzzle(completeGrid: Array<IntArray>, difficulty: String): Array<Array<SudokuCell>> {
+    private fun hasUniqueSolution(puzzle: Array<Array<SudokuCell>>): Boolean {
+        // Convert to IntArray for easier processing
+        val grid = Array(GRID_SIZE) { row -> IntArray(GRID_SIZE) { col -> puzzle[row][col].value } }
+        var solutionCount = 0
+        fun solve(row: Int, col: Int): Boolean {
+            if (row == GRID_SIZE) {
+                solutionCount++
+                return solutionCount > 1 // Stop if more than one solution found
+            }
+            val nextRow = if (col == GRID_SIZE - 1) row + 1 else row
+            val nextCol = if (col == GRID_SIZE - 1) 0 else col + 1
+            if (grid[row][col] != 0) {
+                return solve(nextRow, nextCol)
+            }
+            for (num in 1..9) {
+                if (isSafeForGrid(grid, row, col, num)) {
+                    grid[row][col] = num
+                    if (solve(nextRow, nextCol)) {
+                        grid[row][col] = 0
+                        return true // Early exit if more than one solution
+                    }
+                    grid[row][col] = 0
+                }
+            }
+            return false
+        }
+        solve(0, 0)
+        return solutionCount == 1
+    }
+
+    private fun isSafeForGrid(grid: Array<IntArray>, row: Int, col: Int, num: Int): Boolean {
+        for (c in 0 until GRID_SIZE) if (grid[row][c] == num) return false
+        for (r in 0 until GRID_SIZE) if (grid[r][col] == num) return false
+        val boxRow = (row / BOX_SIZE) * BOX_SIZE
+        val boxCol = (col / BOX_SIZE) * BOX_SIZE
+        for (r in boxRow until boxRow + BOX_SIZE) {
+            for (c in boxCol until boxCol + BOX_SIZE) {
+                if (grid[r][c] == num) return false
+            }
+        }
+        return true
+    }
+
+    /**
+     * Create a puzzle by removing cells, checking for uniqueness after each removal
+     */
+    private fun createPuzzleWithUniquenessCheck(completeGrid: Array<IntArray>, difficulty: String): Array<Array<SudokuCell>> {
         val puzzle = Array(GRID_SIZE) { row ->
             Array(GRID_SIZE) { col ->
                 SudokuCell(
@@ -169,34 +215,30 @@ class SudokuGenerator {
                 )
             }
         }
-
-        val cellsToRemove = when (difficulty.lowercase()) {
+        val positions = mutableListOf<Pair<Int, Int>>()
+        for (row in 0 until GRID_SIZE) {
+            for (col in 0 until GRID_SIZE) {
+                positions.add(Pair(row, col))
+            }
+        }
+        positions.shuffle(Random.Default)
+        var removed = 0
+        val targetRemoved = when (difficulty.lowercase()) {
             "easy" -> EASY_CELLS_TO_REMOVE
             "medium" -> MEDIUM_CELLS_TO_REMOVE
             "hard" -> HARD_CELLS_TO_REMOVE
             else -> EASY_CELLS_TO_REMOVE
         }
-
-        // Get all cell positions and shuffle them
-        val allPositions = mutableListOf<Pair<Int, Int>>()
-        for (row in 0 until GRID_SIZE) {
-            for (col in 0 until GRID_SIZE) {
-                allPositions.add(Pair(row, col))
-            }
-        }
-        allPositions.shuffle(Random.Default)
-
-        // Remove numbers from random positions
-        var removed = 0
-        for (position in allPositions) {
-            if (removed >= cellsToRemove) break
-
+        for (position in positions) {
+            if (removed >= targetRemoved) break
             val (row, col) = position
-            puzzle[row][col] = SudokuCell(
-                value = 0,
-                isOriginal = false
-            )
-            removed++
+            val originalValue = puzzle[row][col].value
+            puzzle[row][col] = SudokuCell(value = 0, isOriginal = false)
+            if (hasUniqueSolution(puzzle)) {
+                removed++
+            } else {
+                puzzle[row][col] = SudokuCell(value = originalValue, isOriginal = true)
+            }
         }
 
         return puzzle

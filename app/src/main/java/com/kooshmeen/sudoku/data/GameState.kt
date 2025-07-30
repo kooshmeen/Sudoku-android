@@ -108,11 +108,7 @@ class GameState {
      */
     private fun setValue(row: Int, col: Int, value: Int) {
         val currentCell = grid[row][col]
-
-        // Don't allow modifying original puzzle cells
         if (currentCell.isOriginal) return
-
-        // Create action for undo
         val action = GameAction.SetValue(
             row = row,
             col = col,
@@ -121,25 +117,24 @@ class GameState {
             oldNotes = currentCell.notes
         )
         actionHistory.push(action)
-
-        // Check for conflicts
         val gridValues = Array(9) {r -> IntArray(9) { c -> grid[r][c].value } }
         val hasConflict = !SudokuValidator.isValidMove(gridValues, row, col, value)
-
-        // Update the cell
         val newGrid = Array(9) { r -> Array(9) { c -> grid[r][c] } }
         newGrid[row][col] = currentCell.copy(
             value = value,
-            notes = emptySet(), // Clear notes when setting a value
+            notes = emptySet(),
             hasError = hasConflict
         )
-
-        // Remove notes of this value in row, column, and box
-        // Remove from row
+        // Track cells and old notes for undo
+        val affectedCells = mutableListOf<Pair<Int, Int>>()
+        val affectedOldNotes = mutableListOf<Set<Int>>()
+        // Remove notes of this value in row
         for (c in 0..8) {
             if (c != col) {
                 val cell = newGrid[row][c]
                 if (cell.notes.contains(value)) {
+                    affectedCells.add(Pair(row, c))
+                    affectedOldNotes.add(cell.notes)
                     newGrid[row][c] = cell.copy(notes = cell.notes - value)
                 }
             }
@@ -149,6 +144,8 @@ class GameState {
             if (r != row) {
                 val cell = newGrid[r][col]
                 if (cell.notes.contains(value)) {
+                    affectedCells.add(Pair(r, col))
+                    affectedOldNotes.add(cell.notes)
                     newGrid[r][col] = cell.copy(notes = cell.notes - value)
                 }
             }
@@ -161,22 +158,23 @@ class GameState {
                 if ((r != row || c != col)) {
                     val cell = newGrid[r][c]
                     if (cell.notes.contains(value)) {
+                        affectedCells.add(Pair(r, c))
+                        affectedOldNotes.add(cell.notes)
                         newGrid[r][c] = cell.copy(notes = cell.notes - value)
                     }
                 }
             }
         }
-
-        // Update error cells
+        // Push batch note removal to action stack for undo
+        if (affectedCells.isNotEmpty()) {
+            actionHistory.push(GameAction.RemoveNotesBatch(affectedCells, value, affectedOldNotes))
+        }
         if (hasConflict) {
             errorCells = errorCells + Pair(row, col)
         } else {
             errorCells = errorCells - Pair(row, col)
         }
-
         grid = newGrid
-
-        // Check if game is completed after this move
         if (isGameComplete()) {
             isGameCompleted = true
         }
@@ -273,6 +271,12 @@ class GameState {
                     notes = action.oldNotes,
                     isOriginal = grid[action.row][action.col].isOriginal
                 )
+            }
+            is GameAction.RemoveNotesBatch -> {
+                action.cells.forEachIndexed { idx, (row, col) ->
+                    val cell = grid[row][col]
+                    newGrid[row][col] = cell.copy(notes = action.oldNotes[idx])
+                }
             }
         }
 

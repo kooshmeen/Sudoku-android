@@ -121,7 +121,8 @@ private fun NotesGrid(notes: Set<Int>, selectedNumber: Int?) {
                             text = if (notes.contains(number)) number.toString() else "",
                             fontSize = 11.sp,
                             fontWeight = if (isBold) FontWeight.ExtraBold else FontWeight.Normal,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            color = if (isBold) MaterialTheme.colorScheme.onSurface.copy(alpha = 1f)
+                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
                             textAlign = TextAlign.Start,
                             modifier = Modifier.padding(0.dp),
                             // make text persistent, i.e., don't truncate or wrap
