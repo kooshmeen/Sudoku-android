@@ -34,6 +34,7 @@ fun SudokuCell(
     value: Int, // 0 if empty
     notes: Set<Int> = emptySet(), // Notes 1-9 for empty cells
     isSelected: Boolean = false,
+    isOriginal: Boolean = false, // New parameter to identify original puzzle cells
     hasError: Boolean = false, // Not used here, but can be added for error state
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {}
@@ -55,9 +56,12 @@ fun SudokuCell(
             Text(
                 text = value.toString(),
                 fontSize = 30.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (hasError) MaterialTheme.colorScheme.error
-                        else MaterialTheme.colorScheme.onSurface,
+                fontWeight = if (isOriginal) FontWeight.ExtraBold else FontWeight.Bold,
+                color = when {
+                    hasError -> MaterialTheme.colorScheme.error
+                    isOriginal -> MaterialTheme.colorScheme.primary
+                    else -> MaterialTheme.colorScheme.onSurface
+                },
             )
         } else if (notes.isNotEmpty()) {
             // Display notes in 3x3 mini-grid

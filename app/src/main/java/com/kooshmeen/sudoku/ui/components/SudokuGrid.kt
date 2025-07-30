@@ -40,6 +40,7 @@ fun SudokuGrid(
                         value = cell.value,
                         notes = cell.notes,
                         isSelected = selectedCell == Pair(row, col),
+                        isOriginal = cell.isOriginal,
                         hasError = cell.hasError,
                         onClick = { onCellClick(row, col) },
                         modifier = Modifier

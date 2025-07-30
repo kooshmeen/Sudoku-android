@@ -23,10 +23,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -53,12 +56,20 @@ fun GameScreen(
     onNavigateToMenu: () -> Unit = { /* Default no-op */ }
 ) {
     val gameState = GameStateManager.gameState
+    var showCompletionDialog by remember { mutableStateOf(false) }
 
-    // Timer effect
-    LaunchedEffect(gameState.isPaused) {
-        while (true) {
+    // Timer effect - only run when game is active and not paused
+    LaunchedEffect(gameState.isGameActive, gameState.isPaused) {
+        while (gameState.isGameActive && !gameState.isPaused) {
             delay(1000)
             gameState.updateTimer()
+        }
+    }
+
+    // Check for game completion
+    LaunchedEffect(gameState.isGameCompleted) {
+        if (gameState.isGameCompleted) {
+            showCompletionDialog = true
         }
     }
 
@@ -169,6 +180,41 @@ fun GameScreen(
             onNotesClick = { gameState.toggleNotesMode() },
             onUndoClick = { gameState.undo() }
         )
+
+        // Completion Dialog
+        if (showCompletionDialog) {
+            AlertDialog(
+                onDismissRequest = {
+                    showCompletionDialog = false
+                    GameStateManager.endGame()
+                },
+                title = { Text("Congratulations!") },
+                text = {
+                    Text("You completed the ${gameState.difficulty} puzzle in ${gameState.getFormattedTime()}!")
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showCompletionDialog = false
+                            GameStateManager.endGame()
+                            onNavigateToMenu()
+                        }
+                    ) {
+                        Text("Back to Menu")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            showCompletionDialog = false
+                            GameStateManager.endGame()
+                        }
+                    ) {
+                        Text("Stay Here")
+                    }
+                }
+            )
+        }
     }
 }
 

@@ -127,7 +127,7 @@ class GameState {
         val hasConflict = !SudokuValidator.isValidMove(gridValues, row, col, value)
 
         // Update the cell
-        val newGrid = grid.map { it.clone() }.toTypedArray()
+        val newGrid = Array(9) { r -> Array(9) { c -> grid[r][c] } }
         newGrid[row][col] = currentCell.copy(
             value = value,
             notes = emptySet(), // Clear notes when setting a value
@@ -142,6 +142,11 @@ class GameState {
         }
 
         grid = newGrid
+
+        // Check if game is completed after this move
+        if (isGameComplete()) {
+            isGameCompleted = true
+        }
     }
 
     /**
@@ -153,7 +158,7 @@ class GameState {
         // Only allow notes in empty cells
         if (currentCell.isFilled || currentCell.isOriginal) return
 
-        val newGrid = grid.map { it.clone() }.toTypedArray()
+        val newGrid = Array(9) { r -> Array(9) { c -> grid[r][c] } }
 
         if (currentCell.notes.contains(note)) {
             // Remove note
@@ -195,8 +200,8 @@ class GameState {
         actionHistory.push(action)
 
         // Clear the cell
-        val newGrid = grid.map { it.clone() }.toTypedArray()
-        newGrid[row][col] = currentCell.copy()
+        val newGrid = Array(9) { r -> Array(9) { c -> grid[r][c] } }
+        newGrid[row][col] = SudokuCell() // Create a new empty cell
         grid = newGrid
     }
 
@@ -207,13 +212,14 @@ class GameState {
         if (actionHistory.isEmpty()) return
 
         val action = actionHistory.pop()
-        val newGrid = grid.map { it.clone() }.toTypedArray()
+        val newGrid = Array(9) { r -> Array(9) { c -> grid[r][c] } }
 
         when (action) {
             is GameAction.SetValue -> {
                 newGrid[action.row][action.col] = grid[action.row][action.col].copy(
                     value = action.oldValue,
                     notes = action.oldNotes,
+                    hasError = false
                 )
             }
             is GameAction.AddNote -> {
@@ -229,9 +235,10 @@ class GameState {
                 )
             }
             is GameAction.ClearCell -> {
-                newGrid[action.row][action.col] = grid[action.row][action.col].copy(
+                newGrid[action.row][action.col] = SudokuCell(
                     value = action.oldValue,
                     notes = action.oldNotes,
+                    isOriginal = grid[action.row][action.col].isOriginal
                 )
             }
         }
@@ -277,9 +284,8 @@ class GameState {
         this.isGameCompleted = false
         this.errorCells = emptySet()
 
-        // Initialize with empty grid for now
-        // TODO: Generate puzzle based on difficulty
-        grid = Array(9) { Array(9) { SudokuCell() } }
+        // Generate a new puzzle based on difficulty
+        grid = SudokuGenerator.generatePuzzle(difficulty)
     }
 
     /**
