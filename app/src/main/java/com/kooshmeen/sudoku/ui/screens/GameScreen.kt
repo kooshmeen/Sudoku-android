@@ -76,7 +76,7 @@ fun GameScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(2.dp)
+            .padding(12.dp)
             .background(MaterialTheme.colorScheme.background) // Use MaterialTheme for background color
     ) {
         Row(
@@ -130,8 +130,9 @@ fun GameScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             SudokuGrid(
-                grid = gameState.grid, // Pass the full SudokuCell grid instead of extracting values
+                grid = gameState.grid,
                 selectedCell = null,
+                selectedNumber = gameState.selectedNumber, // Pass selectedNumber
                 onCellClick = { row, col ->
                     gameState.inputToCell(row, col)
                 },
@@ -157,15 +158,29 @@ fun GameScreen(
 
         Spacer(Modifier.height(96.dp))
 
+        // Compute which numbers are disabled (already filled in all spots)
+        val numberCounts = IntArray(9) { 0 }
+        for (row in gameState.grid) {
+            for (cell in row) {
+                if (cell.value in 1..9) {
+                    numberCounts[cell.value - 1]++
+                }
+            }
+        }
+        val disabledNumbers = numberCounts.mapIndexed { idx, count -> if (count >= 9) idx + 1 else null }.filterNotNull()
+
         // Input numbers row
         InputRow(
             modifier = Modifier.fillMaxWidth(),
             input = List(9) { it + 1 },
             onInputChange = { index, value ->
                 val number = value.toInt()
-                gameState.selectNumber(number)
+                if (!disabledNumbers.contains(number)) {
+                    gameState.selectNumber(number)
+                }
             },
-            selectedNumber = gameState.selectedNumber
+            selectedNumber = gameState.selectedNumber,
+            disabledNumbers = disabledNumbers // Pass disabled numbers
         )
         Spacer(Modifier.height(24.dp))
         // Utility Row
@@ -226,7 +241,8 @@ fun GameScreenPreview() {
     SudokuTheme(darkTheme = isDarkTheme) {
         GameScreen(
             isDarkTheme = isDarkTheme,
-            onThemeToggle = { isDarkTheme = it }
+            onThemeToggle = { isDarkTheme = it },
+
         )
     }
 }

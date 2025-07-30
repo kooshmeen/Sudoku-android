@@ -24,6 +24,7 @@ import com.kooshmeen.sudoku.data.SudokuCell
 fun SudokuGrid(
     grid: Array<Array<SudokuCell>>, // Change from Array<IntArray> to Array<Array<SudokuCell>>
     selectedCell: Pair<Int, Int>? = null,
+    selectedNumber: Int? = null, // Add selectedNumber
     onCellClick: (Int, Int) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
@@ -36,12 +37,14 @@ fun SudokuGrid(
             Row {
                 repeat(9) { col ->
                     val cell = grid[row][col]
+                    val isHighlighted = selectedNumber != null && cell.value == selectedNumber
                     SudokuCell(
                         value = cell.value,
                         notes = cell.notes,
                         isSelected = selectedCell == Pair(row, col),
                         isOriginal = cell.isOriginal,
                         hasError = cell.hasError,
+                        isHighlighted = isHighlighted, // Pass highlight flag
                         onClick = { onCellClick(row, col) },
                         modifier = Modifier
                             .weight(1f)
@@ -91,7 +94,7 @@ fun SudokuGridPreview() {
     sampleGrid[1][1] = SudokuCell(value = 3)
     sampleGrid[4][4] = SudokuCell(value = 7)
     sampleGrid[3][0] = SudokuCell(value = 5, hasError = true)
-    sampleGrid[0][1] = SudokuCell(notes = setOf(1, 2, 3))
+    sampleGrid[0][1] = SudokuCell(notes = setOf(1, 2, 3, 4, 5, 6, 7, 8, 9))
 
     SudokuGrid(
         grid = sampleGrid,

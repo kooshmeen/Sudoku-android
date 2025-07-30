@@ -36,17 +36,26 @@ fun SudokuCell(
     isSelected: Boolean = false,
     isOriginal: Boolean = false, // New parameter to identify original puzzle cells
     hasError: Boolean = false, // Not used here, but can be added for error state
+    isHighlighted: Boolean = false, // New parameter for highlight
+    selectedNumber: Int? = null, // Pass selectedNumber
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {}
 ) {
     val borderColor = MaterialTheme.colorScheme.outline
     val selectedColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+    val highlightColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f)
 
     Box(
         modifier = modifier
             .aspectRatio(1f)
             .border(0.5.dp, borderColor)
-            .background(if (isSelected) selectedColor else Color.Transparent)
+            .background(
+                when {
+                    isSelected -> selectedColor
+                    isHighlighted -> highlightColor
+                    else -> Color.Transparent
+                }
+            )
             .clickable { onClick() }
             .padding(0.dp),
         contentAlignment = Alignment.Center
@@ -64,14 +73,13 @@ fun SudokuCell(
                 },
             )
         } else if (notes.isNotEmpty()) {
-            // Display notes in 3x3 mini-grid
-            NotesGrid(notes = notes)
+            NotesGrid(notes = notes, selectedNumber = selectedNumber)
         }
     }
 }
 
 @Composable
-private fun NotesGrid(notes: Set<Int>) {
+private fun NotesGrid(notes: Set<Int>, selectedNumber: Int?) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -88,18 +96,20 @@ private fun NotesGrid(notes: Set<Int>) {
             ) {
                 repeat(3) { col ->
                     val number = row * 3 + col + 1
+                    val isBold = selectedNumber == number
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .padding(0.dp), // Explicit zero padding
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.TopCenter
                     ) {
                         Text(
                             text = if (notes.contains(number)) number.toString() else "",
-                            fontSize = 6.sp, // Even smaller font size
+                            fontSize = 9.sp,
+                            fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(0.dp) // No padding on text
+                            modifier = Modifier.padding(0.dp)
                         )
                     }
                 }
@@ -115,7 +125,7 @@ fun SudokuCellPreviewFilled() {
     SudokuCell(
         value = 5,
         isSelected = true,
-        modifier = Modifier.padding(8.dp)
+        modifier = Modifier.padding(0.dp)
     )
 }
 
@@ -126,7 +136,8 @@ fun SudokuCellPreviewEmptyWithNotes() {
     SudokuCell(
         value = 0,
         notes = setOf(1, 2, 3, 5, 7),
+        selectedNumber = 5,
         isSelected = false,
-        modifier = Modifier.padding(8.dp)
+        modifier = Modifier.padding(0.dp)
     )
 }
