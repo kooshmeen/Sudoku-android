@@ -93,21 +93,21 @@ private fun NotesGrid(notes: Set<Int>, selectedNumber: Int?) {
                 modifier = Modifier
                     .fillMaxHeight(
                         when (row) {
-                            0 -> 1f/3f
-                            1 -> 1f/2f
+                            0 -> 0.8f/3f
+                            1 -> 0.8f/2f
                             else -> 1f
                         }
                     )
                     .padding(0.dp), // Explicit zero padding
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.Top,
             ) {
                 repeat(3) { col ->
                     val number = row * 3 + col + 1
                     val isBold = selectedNumber == number
                     Box(
                         modifier = Modifier
-                            .fillMaxHeight()
+
                             .fillMaxWidth(
                                 when (col) {
                                     0 -> 1f/3f
@@ -120,11 +120,15 @@ private fun NotesGrid(notes: Set<Int>, selectedNumber: Int?) {
                     ) {
                         Text(
                             text = if (notes.contains(number)) number.toString() else "",
-                            fontSize = 8.sp,
-                            fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
+                            fontSize = 11.sp,
+                            fontWeight = if (isBold) FontWeight.ExtraBold else FontWeight.Normal,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(0.dp)
+                            textAlign = TextAlign.Start,
+                            modifier = Modifier.padding(0.dp),
+                            // make text persistent, i.e., don't truncate or wrap
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Visible
                         )
                     }
                 }
