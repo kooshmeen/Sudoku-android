@@ -59,7 +59,7 @@ fun InputRow(
                         onInputChange(index, number.toString())
                     }
                     .border(
-                        width = if (isSelected) 9.dp else 3.dp,
+                        width = if (isSelected) 9.dp else if (!isDisabled) 3.dp else 0.dp,
                         color = if (isSelected) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.outline
                     )

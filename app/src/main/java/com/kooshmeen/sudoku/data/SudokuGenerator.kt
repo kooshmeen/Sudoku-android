@@ -35,7 +35,7 @@ class SudokuGenerator {
     /**
      * Generate a complete valid Sudoku grid
      */
-    private fun generateCompleteGrid(): Array<IntArray> {
+    fun generateCompleteGrid(): Array<IntArray> {
         // Fill diagonal 3x3 boxes first (they don't depend on each other)
         fillDiagonalBoxes()
 
@@ -206,7 +206,7 @@ class SudokuGenerator {
     /**
      * Create a puzzle by removing cells, checking for uniqueness after each removal
      */
-    private fun createPuzzleWithUniquenessCheck(completeGrid: Array<IntArray>, difficulty: String): Array<Array<SudokuCell>> {
+    fun createPuzzleWithUniquenessCheck(completeGrid: Array<IntArray>, difficulty: String): Array<Array<SudokuCell>> {
         val puzzle = Array(GRID_SIZE) { row ->
             Array(GRID_SIZE) { col ->
                 SudokuCell(

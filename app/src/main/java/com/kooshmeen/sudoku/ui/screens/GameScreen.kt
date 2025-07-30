@@ -144,7 +144,7 @@ fun GameScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)),
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 1f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -198,6 +198,7 @@ fun GameScreen(
 
         // Completion Dialog
         if (showCompletionDialog) {
+            GameStateManager.endGame()
             AlertDialog(
                 onDismissRequest = {
                     showCompletionDialog = false

@@ -56,6 +56,9 @@ class GameState {
     var isGameCompleted by mutableStateOf(false)
         private set
 
+    // Store the original solution grid for error checking
+    private var solutionGrid: Array<IntArray> = Array(9) { IntArray(9) }
+
     enum class GameMode {
         NORMAL,    // Place numbers
         NOTES,     // Add/remove notes
@@ -117,13 +120,13 @@ class GameState {
             oldNotes = currentCell.notes
         )
         actionHistory.push(action)
-        val gridValues = Array(9) {r -> IntArray(9) { c -> grid[r][c].value } }
-        val hasConflict = !SudokuValidator.isValidMove(gridValues, row, col, value)
         val newGrid = Array(9) { r -> Array(9) { c -> grid[r][c] } }
+        // Error: compare to solutionGrid
+        val hasError = solutionGrid[row][col] != value
         newGrid[row][col] = currentCell.copy(
             value = value,
             notes = emptySet(),
-            hasError = hasConflict
+            hasError = hasError
         )
         // Track cells and old notes for undo
         val affectedCells = mutableListOf<Pair<Int, Int>>()
@@ -169,7 +172,7 @@ class GameState {
         if (affectedCells.isNotEmpty()) {
             actionHistory.push(GameAction.RemoveNotesBatch(affectedCells, value, affectedOldNotes))
         }
-        if (hasConflict) {
+        if (hasError) {
             errorCells = errorCells + Pair(row, col)
         } else {
             errorCells = errorCells - Pair(row, col)
@@ -321,8 +324,11 @@ class GameState {
         this.isGameCompleted = false
         this.errorCells = emptySet()
 
-        // Generate a new puzzle based on difficulty
-        grid = SudokuGenerator.generatePuzzle(difficulty)
+        // Generate a new puzzle and store the solution grid
+        val generator = SudokuGenerator()
+        val completeGrid = generator.generateCompleteGrid()
+        solutionGrid = completeGrid.map { it.clone() }.toTypedArray()
+        grid = generator.createPuzzleWithUniquenessCheck(completeGrid, difficulty)
     }
 
     /**
@@ -354,7 +360,7 @@ class GameState {
      * Update timer (call this every second when game is not paused)
      */
     fun updateTimer() {
-        if (!isPaused) {
+        if (!isPaused && isGameActive) {
             elapsedTimeSeconds++
         }
     }
