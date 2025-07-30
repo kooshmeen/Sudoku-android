@@ -75,17 +75,13 @@ class SudokuGenerator {
         var currentRow = row
         var currentCol = col
 
-        if (row == 9 || col == 9) {
-            return true
-        }
-
-        // Move to next cell
-        if (currentCol >= GRID_SIZE && currentRow < GRID_SIZE - 1) {
+        // Move to next cell if we've reached the end of current row
+        if (currentCol >= GRID_SIZE) {
             currentRow += 1
             currentCol = 0
         }
 
-        // If we've filled all cells, we're done
+        // If we've filled all rows, we're done
         if (currentRow >= GRID_SIZE) {
             return true
         }
