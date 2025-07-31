@@ -5,6 +5,9 @@
 
 package com.kooshmeen.sudoku.data
 
+import android.content.Context
+import com.kooshmeen.sudoku.utils.GameStatePersistence
+
 object GameStateManager {
     private val _gameState = GameState()
 
@@ -18,9 +21,33 @@ object GameStateManager {
     }
 
     /**
+     * Check if there's a saved game that can be loaded
+     */
+    fun hasSavedGame(context: Context): Boolean {
+        return GameStatePersistence.loadGameState(context) != null
+    }
+
+    /**
+     * Load saved game
+     */
+    fun loadSavedGame(context: Context): Boolean {
+        val savedState = GameStatePersistence.loadGameState(context) ?: return false
+        _gameState.loadFromSavedState(savedState)
+        return true
+    }
+
+    /**
+     * Save current game
+     */
+    fun saveCurrentGame(context: Context) {
+        GameStatePersistence.saveGameState(context, _gameState)
+    }
+
+    /**
      * Start a new game with the specified difficulty
      */
-    fun startNewGame(difficulty: String) {
+    fun startNewGame(difficulty: String, context: Context? = null) {
+        context?.let { GameStatePersistence.clearSavedGame(it) }
         _gameState.startNewGame(difficulty)
     }
 

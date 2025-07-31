@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import com.kooshmeen.sudoku.R
 import com.kooshmeen.sudoku.data.GameStateManager
 import com.kooshmeen.sudoku.ui.theme.SudokuTheme
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun MainMenu (
@@ -59,7 +60,11 @@ fun MainMenu (
 ) {
     var isDifficultyDropdownOpen by remember { mutableStateOf(false) }
     var selectedDifficulty by remember { mutableStateOf("Easy") }
-    val hasActiveGame = GameStateManager.hasActiveGame()
+
+    val context = LocalContext.current
+    val hasActiveGame = remember {
+        GameStateManager.hasActiveGame() || GameStateManager.hasSavedGame(context)
+    }
 
     Column (
         modifier = Modifier
@@ -117,6 +122,9 @@ fun MainMenu (
         if (hasActiveGame) {
             Button(
                 onClick = {
+                    if (!GameStateManager.hasActiveGame()) {
+                        GameStateManager.loadSavedGame(context)
+                    }
                     GameStateManager.continueGame()
                     onContinueGame()
                 },
@@ -135,7 +143,7 @@ fun MainMenu (
         // Start new game button
         Button(
             onClick = {
-                GameStateManager.startNewGame(selectedDifficulty)
+                GameStateManager.startNewGame(selectedDifficulty, context)
                 onStartNewGame(selectedDifficulty)
             },
             modifier = Modifier
