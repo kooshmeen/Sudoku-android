@@ -36,6 +36,16 @@ fun RecordScreen(
 
     val difficulties = listOf("Easy", "Medium", "Hard")
 
+    // Make best times reactive to refresh state
+    val bestTimes = remember(refresh) {
+        difficulties.associateWith { difficulty ->
+            Pair(
+                BestTimeManager.getBestTimeFormatted(context, difficulty),
+                BestTimeManager.getBestTimeNoMistakeFormatted(context, difficulty)
+            )
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -48,14 +58,14 @@ fun RecordScreen(
             color = MaterialTheme.colorScheme.onBackground
         )
         difficulties.forEach { difficulty ->
+            val (bestTime, bestTimeNoMistakes) = bestTimes[difficulty] ?: Pair("No best time", "No best time")
             Text(
-                text = "$difficulty: ${BestTimeManager.getBestTimeFormatted(context, difficulty)}",
+                text = "$difficulty: $bestTime",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onBackground
             )
             Text(
-                text = "$difficulty (No Mistakes): ${BestTimeManager.getBestTimeNoMistakeFormatted(
-                    context, difficulty)}",
+                text = "$difficulty (No Mistakes): $bestTimeNoMistakes",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onBackground
             )
