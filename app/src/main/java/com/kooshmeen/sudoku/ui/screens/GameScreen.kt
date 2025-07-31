@@ -200,7 +200,7 @@ fun GameScreen(
         // Completion Dialog
         if (showCompletionDialog) {
             // Check for new best time
-            val isNewBest = BestTimeManager.setBestTime(
+            val (isNewBest, isNewBestNoMistakes) = BestTimeManager.setBestTime(
                 context = LocalContext.current,
                 difficulty = gameState.difficulty,
                 time = gameState.getFormattedTime()
