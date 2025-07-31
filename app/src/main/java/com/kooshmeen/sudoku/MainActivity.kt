@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.kooshmeen.sudoku.data.GameStateManager
 import com.kooshmeen.sudoku.ui.screens.GameScreen
 import com.kooshmeen.sudoku.ui.screens.MainMenu
 import com.kooshmeen.sudoku.ui.screens.RecordScreen
@@ -93,5 +94,11 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Save game state when app goes to background
+        GameStateManager.saveCurrentGame(this)
     }
 }

@@ -62,7 +62,8 @@ class GameState {
         private set
 
     // Store the original solution grid for error checking
-    private var solutionGrid: Array<IntArray> = Array(9) { IntArray(9) }
+    internal var solutionGrid: Array<IntArray> = Array(9) { IntArray(9) }
+        private set
 
     enum class GameMode {
         NORMAL,    // Place numbers
@@ -380,5 +381,42 @@ class GameState {
         val minutes = elapsedTimeSeconds / 60
         val seconds = elapsedTimeSeconds % 60
         return String.format(Locale.ROOT, "%02d:%02d", minutes, seconds)
+    }
+
+    /**
+     * Load game state from saved data
+     */
+    fun loadFromSavedState(savedState: SavedGameState) {
+        this.difficulty = savedState.difficulty
+        this.elapsedTimeSeconds = savedState.elapsedTimeSeconds
+        this.mistakesCount = savedState.mistakesCount
+        this.isGameActive = true
+        this.isGameCompleted = false
+        this.isPaused = false
+        this.selectedCell = null
+        this.selectedNumber = null
+        this.gameMode = GameMode.NORMAL
+        this.actionHistory.clear()
+        this.errorCells = emptySet()
+
+        // Convert saved grid to SudokuCell array
+        this.grid = Array(9) { row ->
+            Array(9) { col ->
+                val saved = savedState.grid[row][col]
+                SudokuCell(
+                    value = saved.value,
+                    notes = saved.notes.toSet(),
+                    isOriginal = saved.isOriginal,
+                    hasError = saved.hasError
+                )
+            }
+        }
+
+        // Convert solution grid
+        this.solutionGrid = Array(9) { row ->
+            IntArray(9) { col ->
+                savedState.solutionGrid[row][col]
+            }
+        }
     }
 }
