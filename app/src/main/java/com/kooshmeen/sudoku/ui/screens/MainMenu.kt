@@ -53,7 +53,9 @@ fun MainMenu (
     isDarkTheme: Boolean = true, // Default value for dark theme
     onNavigateToGame: () -> Unit = { /* Default no-op */ },
     onContinueGame: () -> Unit = { /* Default no-op */ },
-    onStartNewGame: (String) -> Unit = { /* Default no-op */ }
+    onStartNewGame: (String) -> Unit = { /* Default no-op */ },
+    onNavigateToRecords: () -> Unit = { /* Default no-op */ },
+    onNavigateToLeaderboard: () -> Unit = { /* Default no-op */ }
 ) {
     var isDifficultyDropdownOpen by remember { mutableStateOf(false) }
     var selectedDifficulty by remember { mutableStateOf("Easy") }
@@ -205,6 +207,34 @@ fun MainMenu (
         }
 
         Spacer(modifier = Modifier.height(128.dp))
+
+        // Row for Leaderboard button (left) and Records button (right)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Button(
+                onClick = { /* TODO: Navigate to Leaderboard */ },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = "Leaderboard",
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp)) // Space between buttons
+            Button(
+                onClick = { onNavigateToRecords() },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = "Records",
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
+            }
+        }
     }
 }
 

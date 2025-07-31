@@ -38,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kooshmeen.sudoku.data.GameState
@@ -46,6 +47,7 @@ import com.kooshmeen.sudoku.ui.components.InputRow
 import com.kooshmeen.sudoku.ui.components.SudokuGrid
 import com.kooshmeen.sudoku.ui.components.UtilityRow
 import com.kooshmeen.sudoku.ui.theme.SudokuTheme
+import com.kooshmeen.sudoku.utils.BestTimeManager
 import kotlinx.coroutines.delay
 
 @Composable
@@ -124,7 +126,6 @@ fun GameScreen(
             }
         }
         Spacer(Modifier.height(96.dp))
-
         // Grid - show overlay when paused
         Box(
             modifier = Modifier.fillMaxWidth()
@@ -198,6 +199,14 @@ fun GameScreen(
 
         // Completion Dialog
         if (showCompletionDialog) {
+            // Check for new best time
+            val (isNewBest, isNewBestNoMistakes) = BestTimeManager.setBestTime(
+                context = LocalContext.current,
+                difficulty = gameState.difficulty,
+                time = gameState.getFormattedTime(),
+                numMistakes = gameState.mistakesCount,
+            )
+
             GameStateManager.endGame()
             AlertDialog(
                 onDismissRequest = {
@@ -206,7 +215,11 @@ fun GameScreen(
                 },
                 title = { Text("Congratulations!") },
                 text = {
-                    Text("You completed the ${gameState.difficulty} puzzle in ${gameState.getFormattedTime()}!")
+                    if (isNewBest) {
+                        Text("You completed the game in a new best time for ${gameState.difficulty}: ${gameState.getFormattedTime()}!")
+                    } else {
+                        Text("You completed the game in ${gameState.getFormattedTime()}! Your best time for ${gameState.difficulty} is ${BestTimeManager.getBestTimeFormatted(LocalContext.current, gameState.difficulty)}.")
+                    }
                 },
                 confirmButton = {
                     Button(

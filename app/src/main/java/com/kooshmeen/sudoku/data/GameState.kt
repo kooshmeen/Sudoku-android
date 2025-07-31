@@ -6,6 +6,7 @@
 package com.kooshmeen.sudoku.data
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.kooshmeen.sudoku.utils.SudokuValidator
@@ -23,6 +24,10 @@ class GameState {
 
     // Current game mode
     var gameMode by mutableStateOf(GameMode.NORMAL)
+        private set
+
+    // Current number of mistakes made by the player
+    var mistakesCount by mutableIntStateOf(0)
         private set
 
     // Selected number from input row (1-9)
@@ -174,6 +179,8 @@ class GameState {
         }
         if (hasError) {
             errorCells = errorCells + Pair(row, col)
+            // Mark as mistake
+            mistakesCount++
         } else {
             errorCells = errorCells - Pair(row, col)
         }
@@ -323,6 +330,7 @@ class GameState {
         this.isGameActive = true
         this.isGameCompleted = false
         this.errorCells = emptySet()
+        this.mistakesCount = 0
 
         // Generate a new puzzle and store the solution grid
         val generator = SudokuGenerator()

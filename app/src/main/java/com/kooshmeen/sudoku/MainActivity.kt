@@ -22,6 +22,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.kooshmeen.sudoku.ui.screens.GameScreen
 import com.kooshmeen.sudoku.ui.screens.MainMenu
+import com.kooshmeen.sudoku.ui.screens.RecordScreen
 import com.kooshmeen.sudoku.ui.theme.SudokuTheme
 
 class MainActivity : ComponentActivity() {
@@ -50,6 +51,9 @@ class MainActivity : ComponentActivity() {
                                 onStartNewGame = { difficulty ->
                                     NavController.navigate("game_screen")
                                 },
+                                onNavigateToRecords = {
+                                    NavController.navigate("record_screen")
+                                },
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(innerPadding),
@@ -69,6 +73,20 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(innerPadding),
+                            )
+                        }
+                    }
+                }
+                composable("record_screen") {
+                    SudokuTheme(darkTheme = isDarkTheme) {
+                        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                            RecordScreen(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(innerPadding),
+                                onNavigateBack = {
+                                    NavController.navigateUp()
+                                }
                             )
                         }
                     }
