@@ -203,7 +203,8 @@ fun GameScreen(
             val (isNewBest, isNewBestNoMistakes) = BestTimeManager.setBestTime(
                 context = LocalContext.current,
                 difficulty = gameState.difficulty,
-                time = gameState.getFormattedTime()
+                time = gameState.getFormattedTime(),
+                numMistakes = gameState.mistakesCount,
             )
 
             GameStateManager.endGame()

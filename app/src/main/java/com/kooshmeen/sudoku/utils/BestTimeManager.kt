@@ -6,6 +6,7 @@ package com.kooshmeen.sudoku.utils
 
 import android.annotation.SuppressLint
 import android.content.Context
+import androidx.core.content.edit
 
 object BestTimeManager {
     private const val PREFS_NAME = "BestTimes"
@@ -63,9 +64,12 @@ object BestTimeManager {
      * Returns a Pair<isNewBest, isNewBestNoMistake>
      * where isNewBest indicates if the new time is better than the previous best
      */
-    fun setBestTime(context: Context, difficulty: String, time: String): Pair<Boolean, Boolean> {
+    fun setBestTime(context: Context, difficulty: String, time: String, numMistakes: Int): Pair<Boolean, Boolean> {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val editor = prefs.edit()
+
+        //debug: show number of mistakes
+        println("Number of mistakes: $numMistakes")
 
         // Convert time string to milliseconds
         val parts = time.split(":")
@@ -79,7 +83,7 @@ object BestTimeManager {
 
         // Check if the new time is better
         val isNewBest = newTime < currentBest
-        val isNewBestNoMistake = newTime < currentBestNoMistake
+        val isNewBestNoMistake = (newTime < currentBestNoMistake) && (numMistakes == 0)
 
         // Update best times if necessary
         if (isNewBest) {
@@ -91,5 +95,13 @@ object BestTimeManager {
 
         editor.apply()
         return Pair(isNewBest, isNewBestNoMistake)
+    }
+
+    /**
+     * Clears all best times.
+     */
+    fun clearBestTimes(context: Context) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit { clear() }
     }
 }

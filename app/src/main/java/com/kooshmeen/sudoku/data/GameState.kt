@@ -330,6 +330,7 @@ class GameState {
         this.isGameActive = true
         this.isGameCompleted = false
         this.errorCells = emptySet()
+        this.mistakesCount = 0
 
         // Generate a new puzzle and store the solution grid
         val generator = SudokuGenerator()
