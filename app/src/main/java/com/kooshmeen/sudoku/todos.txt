@@ -4,6 +4,7 @@ add groups functionality - create groups, join groups, view group leaderboards
 add medals for top of group every week, month, day etc
 add way to challenge friends (same puzzle, best time wins, maybe mistake count etc)
 
-
+group: nume grup, hash unic (id ul grupului), nume creator, data crearii, numar membri
+parola: optional, daca nu e setata, se poate intra fara parola
 
 NAT punch through

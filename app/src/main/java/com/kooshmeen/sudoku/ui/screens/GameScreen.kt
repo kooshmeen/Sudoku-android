@@ -125,7 +125,27 @@ fun GameScreen(
                 )
             }
         }
-        Spacer(Modifier.height(96.dp))
+        Spacer(Modifier.height(8.dp))
+
+        // Display number of mistakes and highest possible score
+        Row (
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Mistakes: ${gameState.mistakesCount}",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+            Spacer(Modifier.weight(1f)) // Push the highest possible score to the end
+            Text(
+                text = "Max Score: ${gameState.highestPossibleScore()}",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+        }
+
+        Spacer(Modifier.height(14.dp))
         // Grid - show overlay when paused
         Box(
             modifier = Modifier.fillMaxWidth()
@@ -229,7 +249,7 @@ fun GameScreen(
                     showCompletionDialog = false
                     GameStateManager.endGame()
                 },
-                title = { Text("Congratulations!") },
+                title = { Text("Congratulations! Final score: ${gameState.highestPossibleScore()}") },
                 text = {
                     if (isNewBest) {
                         Text("You completed the game in a new best time for ${gameState.difficulty}: ${gameState.getFormattedTime()}!")

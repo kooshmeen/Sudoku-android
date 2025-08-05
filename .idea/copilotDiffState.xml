@@ -21,15 +21,6 @@
             </PendingDiffInfo>
           </value>
         </entry>
-        <entry key="$PROJECT_DIR$/app/src/main/java/com/kooshmeen/sudoku/data/GameStateManager.kt">
-          <value>
-            <PendingDiffInfo>
-              <option name="filePath" value="$PROJECT_DIR$/app/src/main/java/com/kooshmeen/sudoku/data/GameStateManager.kt" />
-              <option name="originalContent" value="/**&#10; * Global game state manager&#10; * Provides a singleton instance of GameState that can be shared across screens&#10; */&#10;&#10;package com.kooshmeen.sudoku.data&#10;&#10;    val gameState: GameState get() = _gameState&#10;&#10;    /**&#10;     * Check if there's an active game that can be continued&#10;     */&#10;    fun hasActiveGame(): Boolean {&#10;        return _gameState.hasActiveGame()&#10;    }&#10;&#10;    /**&#10;     * Start a new game with the specified difficulty&#10;     */&#10;" />
-              <option name="updatedContent" value="/**&#10; * Global game state manager&#10; * Provides a singleton instance of GameState that can be shared across screens&#10; */&#10;&#10;package com.kooshmeen.sudoku.data&#10;&#10;import android.content.Context&#10;import com.kooshmeen.sudoku.utils.GameStatePersistence&#10;&#10;object GameStateManager {&#10;    private val _gameState = GameState()&#10;&#10;    val gameState: GameState get() = _gameState&#10;&#10;    /**&#10;     * Check if there's an active game that can be continued&#10;     */&#10;    fun hasActiveGame(): Boolean {&#10;        return _gameState.hasActiveGame()&#10;    }&#10;&#10;    /**&#10;     * Check if there's a saved game that can be loaded&#10;     */&#10;    fun hasSavedGame(context: Context): Boolean {&#10;        return GameStatePersistence.loadGameState(context) != null&#10;    }&#10;&#10;    /**&#10;     * Load saved game&#10;     */&#10;    fun loadSavedGame(context: Context): Boolean {&#10;        val savedState = GameStatePersistence.loadGameState(context) ?: return false&#10;        _gameState.loadFromSavedState(savedState)&#10;        return true&#10;    }&#10;&#10;    /**&#10;     * Save current game&#10;     */&#10;    fun saveCurrentGame(context: Context) {&#10;        GameStatePersistence.saveGameState(context, _gameState)&#10;    }&#10;&#10;    /**&#10;     * Start a new game with the specified difficulty&#10;     */&#10;    fun startNewGame(difficulty: String, context: Context? = null) {&#10;        context?.let { GameStatePersistence.clearSavedGame(it) }&#10;        _gameState.startNewGame(difficulty)&#10;    }&#10;&#10;    /**&#10;     * Continue the current active game&#10;     */&#10;    fun continueGame() {&#10;        _gameState.continueGame()&#10;    }&#10;&#10;    /**&#10;     * End the current game&#10;     */&#10;    fun endGame() {&#10;        _gameState.endGame()&#10;    }&#10;}" />
-            </PendingDiffInfo>
-          </value>
-        </entry>
         <entry key="$PROJECT_DIR$/app/src/main/java/com/kooshmeen/sudoku/data/SavedGameState.kt">
           <value>
             <PendingDiffInfo>

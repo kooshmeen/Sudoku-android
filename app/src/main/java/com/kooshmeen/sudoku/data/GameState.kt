@@ -121,6 +121,36 @@ class GameState {
     }
 
     /**
+     * Returns highest possible score from current game state
+     * Calculated as:
+     * const score = Math.round((difficultyMultiplier * mistakePenalty) * (Math.max(0, (timeScore - timeSeconds) * 2) + basePoints));
+     * With: difficultyMultiplier = 0.33 for Easy, 0.7 for Medium, 1.5 for Hard
+     * timeScore = 600 for Easy, 1200 for Medium, 1800 for Hard
+     * mistakePenalty = max(0.4, 1 - (numberOfMistakes * 0.1)
+     * basePoints = 1000
+     */
+    fun highestPossibleScore(): Int {
+        val difficultyMultiplier = when (difficulty.lowercase(Locale.ROOT)) {
+            "easy" -> 0.33
+            "medium" -> 0.7
+            "hard" -> 1.5
+            else -> 0.33 // Default to Easy if unknown
+        }
+
+        val timeScore = when (difficulty.lowercase(Locale.ROOT)) {
+            "easy" -> 600
+            "medium" -> 1200
+            "hard" -> 1800
+            else -> 600 // Default to Easy if unknown
+        }
+
+        val mistakePenalty = maxOf(0.4, 1 - (mistakesCount * 0.1))
+        val basePoints = 1000
+
+        return ((difficultyMultiplier * mistakePenalty) * (maxOf(0, (timeScore - elapsedTimeSeconds) * 2) + basePoints)).toInt()
+    }
+
+    /**
      * Input a number directly to a cell (no selection needed)
      */
     fun inputToCell(row: Int, col: Int) {
