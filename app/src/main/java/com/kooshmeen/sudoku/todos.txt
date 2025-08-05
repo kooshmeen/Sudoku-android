@@ -1,2 +1,9 @@
 TODO for adding multiplayer/other functionalities which include a server:
-add leaderboard support (?)
+add leaderboard support - overall
+add groups functionality - create groups, join groups, view group leaderboards
+add medals for top of group every week, month, day etc
+add way to challenge friends (same puzzle, best time wins, maybe mistake count etc)
+
+
+
+NAT punch through

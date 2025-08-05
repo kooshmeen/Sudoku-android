@@ -207,6 +207,22 @@ fun GameScreen(
                 numMistakes = gameState.mistakesCount,
             )
 
+            val context = LocalContext.current
+
+            LaunchedEffect(Unit) {
+                // Initialize repository if not done
+                gameState.initializeRepository(context)
+
+                // Try to submit score
+                val submitted = gameState.submitScoreToServer()
+                if (!submitted) { // off line mode or not connected to server
+                    // Show a toast or some indication that score submission failed
+                    // Toast.makeText(context, "Score submission failed. Please try again later.", Toast.LENGTH_SHORT).show()
+                    // For now, we will just log it
+                    println("Score submission failed. Please try again later.")
+                }
+            }
+
             GameStateManager.endGame()
             AlertDialog(
                 onDismissRequest = {

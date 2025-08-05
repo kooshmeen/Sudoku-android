@@ -30,7 +30,9 @@ import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,6 +48,8 @@ import com.kooshmeen.sudoku.R
 import com.kooshmeen.sudoku.data.GameStateManager
 import com.kooshmeen.sudoku.ui.theme.SudokuTheme
 import androidx.compose.ui.platform.LocalContext
+import com.kooshmeen.sudoku.repository.SudokuRepository
+import com.kooshmeen.sudoku.data.api.User
 
 @Composable
 fun MainMenu (
@@ -56,14 +60,23 @@ fun MainMenu (
     onContinueGame: () -> Unit = { /* Default no-op */ },
     onStartNewGame: (String) -> Unit = { /* Default no-op */ },
     onNavigateToRecords: () -> Unit = { /* Default no-op */ },
-    onNavigateToLeaderboard: () -> Unit = { /* Default no-op */ }
+    onNavigateToLeaderboard: () -> Unit = { /* Default no-op */ },
+    onNavigateToAuth: () -> Unit = { /* Default no-op */ }
 ) {
     var isDifficultyDropdownOpen by remember { mutableStateOf(false) }
     var selectedDifficulty by remember { mutableStateOf("Easy") }
+    var isLoggedIn by remember { mutableStateOf(false) }
+    var currentUser by remember { mutableStateOf<User?>(null) }
 
     val context = LocalContext.current
     val hasActiveGame = remember {
         GameStateManager.hasActiveGame() || GameStateManager.hasSavedGame(context)
+    }
+    val repository = remember { SudokuRepository(context) }
+
+    LaunchedEffect(Unit) {
+        isLoggedIn = repository.isLoggedIn()
+        currentUser = repository.fetchCurrentUser()
     }
 
     Column (
@@ -107,8 +120,47 @@ fun MainMenu (
             }
         }
 
+        // Login/User status section
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (isLoggedIn && currentUser != null) {
+                // Show welcome message and logout button
+                Column {
+                    Text(
+                        text = "Hello, ${currentUser!!.username}!",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontWeight = FontWeight.Medium
+                    )
+                    TextButton(
+                        onClick = {
+                            repository.logout()
+                            isLoggedIn = false
+                            currentUser = null
+                        }
+                    ) {
+                        Text("Logout", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            } else {
+                // Show login button
+                Button(
+                    onClick = onNavigateToAuth,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                ) {
+                    Text("Login")
+                }
+            }
+            Spacer(modifier = Modifier.weight(1f))
+        }
+
         // Title
-        Spacer(modifier = Modifier.height(64.dp))
+        Spacer(modifier = Modifier.height(32.dp))
         Text(
             text = "Welcome to Sudoku!",
             fontSize = 32.sp,
@@ -116,7 +168,7 @@ fun MainMenu (
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
-        Spacer(modifier = Modifier.height(256.dp))
+        Spacer(modifier = Modifier.height(192.dp))
 
         // Continue game button - only show if there's an active game
         if (hasActiveGame) {

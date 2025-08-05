@@ -21,6 +21,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.kooshmeen.sudoku.data.GameStateManager
+import com.kooshmeen.sudoku.ui.screens.AuthScreen
 import com.kooshmeen.sudoku.ui.screens.GameScreen
 import com.kooshmeen.sudoku.ui.screens.MainMenu
 import com.kooshmeen.sudoku.ui.screens.RecordScreen
@@ -55,11 +56,33 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToRecords = {
                                     NavController.navigate("record_screen")
                                 },
+                                onNavigateToAuth = {
+                                    NavController.navigate("auth_screen")
+                                },
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(innerPadding),
                                 isDarkTheme = isDarkTheme,
                                 onThemeToggle = { isDarkTheme = it }
+                            )
+                        }
+                    }
+                }
+                composable("auth_screen") {
+                    SudokuTheme(darkTheme = isDarkTheme) {
+                        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                            AuthScreen(
+                                onNavigateBack = {
+                                    NavController.navigateUp()
+                                },
+                                onLoginSuccess = {
+                                    NavController.navigate("main_menu") {
+                                        popUpTo("main_menu") { inclusive = true }
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(innerPadding)
                             )
                         }
                     }

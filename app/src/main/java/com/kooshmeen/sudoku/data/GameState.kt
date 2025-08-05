@@ -5,10 +5,12 @@
 
 package com.kooshmeen.sudoku.data
 
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.kooshmeen.sudoku.repository.SudokuRepository
 import com.kooshmeen.sudoku.utils.SudokuValidator
 import java.util.Locale
 import java.util.Stack
@@ -69,6 +71,25 @@ class GameState {
         NORMAL,    // Place numbers
         NOTES,     // Add/remove notes
         ERASE      // Clear cells
+    }
+
+    private lateinit var repository: SudokuRepository
+
+    fun initializeRepository(context: Context) {
+        repository = SudokuRepository(context)
+    }
+
+    suspend fun submitScoreToServer(): Boolean {
+        return if (isGameCompleted && ::repository.isInitialized && repository.isLoggedIn()) {
+            val result = repository.submitGame(
+                difficulty = difficulty,
+                timeSeconds = elapsedTimeSeconds,
+                mistakes = mistakesCount
+            )
+            result.isSuccess
+        } else {
+            false
+        }
     }
 
     /**
