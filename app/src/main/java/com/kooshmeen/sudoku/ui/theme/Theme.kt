@@ -14,32 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80,
-    background = Color(0xFF121212),
-    surface = Color(0xFF1E1E1E),
-    onPrimary = Color.DarkGray,
-    onSecondary = Color.LightGray,
-    onTertiary = Color.LightGray,
-    onBackground = Color.LightGray,
-    onSurface = Color.LightGray,
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40,
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-)
+import com.kooshmeen.sudoku.utils.ThemeManager
 
 @Composable
 fun SudokuTheme(
@@ -47,13 +22,37 @@ fun SudokuTheme(
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
+    val context = LocalContext.current
+    val customTheme = ThemeManager.loadCustomTheme(context)
+
     val targetColorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        darkTheme -> darkColorScheme(
+            primary = customTheme.darkPrimary,
+            secondary = customTheme.darkSecondary,
+            tertiary = customTheme.darkTertiary,
+            background = customTheme.darkBackground,
+            surface = customTheme.darkSurface,
+            onPrimary = customTheme.darkOnPrimary,
+            onSecondary = customTheme.darkOnSecondary,
+            onTertiary = customTheme.darkOnTertiary,
+            onBackground = customTheme.darkOnBackground,
+            onSurface = customTheme.darkOnSurface
+        )
+        else -> lightColorScheme(
+            primary = customTheme.lightPrimary,
+            secondary = customTheme.lightSecondary,
+            tertiary = customTheme.lightTertiary,
+            background = customTheme.lightBackground,
+            surface = customTheme.lightSurface,
+            onPrimary = customTheme.lightOnPrimary,
+            onSecondary = customTheme.lightOnSecondary,
+            onTertiary = customTheme.lightOnTertiary,
+            onBackground = customTheme.lightOnBackground,
+            onSurface = customTheme.lightOnSurface
+        )
     }
 
     // Animate the color scheme

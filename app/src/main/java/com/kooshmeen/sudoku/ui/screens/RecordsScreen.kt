@@ -132,7 +132,8 @@ private fun OverviewSection(stats: StatisticsManager.PlayerStats) {
         )
     ) {
         Column(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.padding(20.dp)
+                .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(

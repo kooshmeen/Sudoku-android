@@ -61,7 +61,8 @@ fun MainMenu (
     onStartNewGame: (String) -> Unit = { /* Default no-op */ },
     onNavigateToRecords: () -> Unit = { /* Default no-op */ },
     onNavigateToLeaderboard: () -> Unit = { /* Default no-op */ },
-    onNavigateToAuth: () -> Unit = { /* Default no-op */ }
+    onNavigateToAuth: () -> Unit = { /* Default no-op */ },
+    onNavigateToSettings: () -> Unit = { /* Default no-op */ }
 ) {
     var isDifficultyDropdownOpen by remember { mutableStateOf(false) }
     var selectedDifficulty by remember { mutableStateOf("Easy") }
@@ -108,7 +109,7 @@ fun MainMenu (
                 )
             }
             Spacer(modifier = Modifier.width(16.dp))
-            IconButton(onClick = { /* TODO: Open Settings */ }) {
+            IconButton(onClick = { onNavigateToSettings() }) {
                 Icon(
                     imageVector = Icons.Rounded.Settings,
                     contentDescription = "Settings",

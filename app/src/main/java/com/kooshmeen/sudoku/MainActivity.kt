@@ -26,6 +26,7 @@ import com.kooshmeen.sudoku.ui.screens.GameScreen
 import com.kooshmeen.sudoku.ui.screens.LeaderboardScreen
 import com.kooshmeen.sudoku.ui.screens.MainMenu
 import com.kooshmeen.sudoku.ui.screens.RecordScreen
+import com.kooshmeen.sudoku.ui.screens.SettingsScreen
 import com.kooshmeen.sudoku.ui.theme.SudokuTheme
 
 class MainActivity : ComponentActivity() {
@@ -62,6 +63,9 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onNavigateToLeaderboard = {
                                     NavController.navigate("leaderboard_screen")
+                                },
+                                onNavigateToSettings = {
+                                    NavController.navigate("settings_screen")
                                 },
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -129,6 +133,22 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(innerPadding)
+                            )
+                        }
+                    }
+                }
+                composable("settings_screen") {
+                    SudokuTheme(darkTheme = isDarkTheme) {
+                        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                            SettingsScreen(
+                                onNavigateBack = {
+                                    NavController.navigateUp()
+                                },
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(innerPadding),
+                                isDarkTheme = isDarkTheme,
+                                onThemeToggle = { isDarkTheme = it }
                             )
                         }
                     }
