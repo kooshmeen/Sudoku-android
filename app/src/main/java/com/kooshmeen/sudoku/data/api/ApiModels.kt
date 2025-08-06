@@ -31,8 +31,14 @@ data class GameSubmission(
 
 data class LeaderboardEntry(
     val player_id: Int,
+    val username: String,
     val score: Int,
-    val period_type: String
+    val rank: Int? = null
+)
+
+data class LeaderboardResponse(
+    val leaderboard: List<LeaderboardEntry>,
+    val total: Int? = null
 )
 
 data class GroupData(

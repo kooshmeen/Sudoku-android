@@ -276,7 +276,7 @@ fun MainMenu (
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Button(
-                onClick = { /* TODO: Navigate to Leaderboard */ },
+                onClick = { onNavigateToLeaderboard() },
                 modifier = Modifier.weight(1f)
             ) {
                 Text(

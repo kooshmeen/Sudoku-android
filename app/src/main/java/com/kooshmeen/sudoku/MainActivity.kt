@@ -23,6 +23,7 @@ import androidx.navigation.compose.rememberNavController
 import com.kooshmeen.sudoku.data.GameStateManager
 import com.kooshmeen.sudoku.ui.screens.AuthScreen
 import com.kooshmeen.sudoku.ui.screens.GameScreen
+import com.kooshmeen.sudoku.ui.screens.LeaderboardScreen
 import com.kooshmeen.sudoku.ui.screens.MainMenu
 import com.kooshmeen.sudoku.ui.screens.RecordScreen
 import com.kooshmeen.sudoku.ui.theme.SudokuTheme
@@ -58,6 +59,9 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onNavigateToAuth = {
                                     NavController.navigate("auth_screen")
+                                },
+                                onNavigateToLeaderboard = {
+                                    NavController.navigate("leaderboard_screen")
                                 },
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -111,6 +115,20 @@ class MainActivity : ComponentActivity() {
                                 onNavigateBack = {
                                     NavController.navigateUp()
                                 }
+                            )
+                        }
+                    }
+                }
+                composable("leaderboard_screen") {
+                    SudokuTheme(darkTheme = isDarkTheme) {
+                        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                            LeaderboardScreen(
+                                onNavigateBack = {
+                                    NavController.navigateUp()
+                                },
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(innerPadding)
                             )
                         }
                     }

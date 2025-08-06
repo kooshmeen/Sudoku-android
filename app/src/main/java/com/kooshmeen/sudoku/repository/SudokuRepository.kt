@@ -3,6 +3,8 @@ package com.kooshmeen.sudoku.repository
 import android.content.Context
 import com.kooshmeen.sudoku.api.ApiClient
 import com.kooshmeen.sudoku.data.api.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class SudokuRepository(private val context: Context) {
     private val apiService = ApiClient.apiService
@@ -82,6 +84,75 @@ class SudokuRepository(private val context: Context) {
             }
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    // Leaderboard methods
+    suspend fun getLeaderboardTotal(): Result<LeaderboardResponse> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getTop100GlobalAllTime()
+
+                if (response.isSuccessful) {
+                    response.body()?.let { Result.success(it) }
+                        ?: Result.failure(Exception("Empty response"))
+                } else {
+                    Result.failure(Exception("Failed to load leaderboard: ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun getLeaderboardMonth(): Result<LeaderboardResponse> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getTop100GlobalMonth()
+
+                if (response.isSuccessful) {
+                    response.body()?.let { Result.success(it) }
+                        ?: Result.failure(Exception("Empty response"))
+                } else {
+                    Result.failure(Exception("Failed to load monthly leaderboard: ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun getLeaderboardWeek(): Result<LeaderboardResponse> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getTop100GlobalWeek()
+
+                if (response.isSuccessful) {
+                    response.body()?.let { Result.success(it) }
+                        ?: Result.failure(Exception("Empty response"))
+                } else {
+                    Result.failure(Exception("Failed to load weekly leaderboard: ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun getLeaderboardDay(): Result<LeaderboardResponse> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getTop100GlobalDay()
+
+                if (response.isSuccessful) {
+                    response.body()?.let { Result.success(it) }
+                        ?: Result.failure(Exception("Empty response"))
+                } else {
+                    Result.failure(Exception("Failed to load daily leaderboard: ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
         }
     }
 
