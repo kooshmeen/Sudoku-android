@@ -38,4 +38,9 @@ sealed class GameAction {
         val note: Int,
         val oldNotes: List<Set<Int>>
     ) : GameAction()
+
+    data class AutofillNotes(
+        val cells: List<Pair<Int, Int>>,
+        val oldNotes: List<Set<Int>>
+    ) : GameAction()
 }

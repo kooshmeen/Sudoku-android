@@ -214,7 +214,8 @@ fun GameScreen(
             },
             onEraseClick = { gameState.toggleEraseMode() },
             onNotesClick = { gameState.toggleNotesMode() },
-            onUndoClick = { gameState.undo() }
+            onUndoClick = { gameState.undo() },
+            onAutofillNotesClick = { gameState.autofillNotes() }
         )
 
         // Completion Dialog
@@ -232,6 +233,9 @@ fun GameScreen(
             LaunchedEffect(Unit) {
                 // Initialize repository if not done
                 gameState.initializeRepository(context)
+
+                // Record game completion in local statistics
+                gameState.recordGameCompletion(context)
 
                 // Try to submit score
                 val submitted = gameState.submitScoreToServer()

@@ -93,6 +93,21 @@ class GameState {
     }
 
     /**
+     * Record game completion in local statistics
+     */
+    fun recordGameCompletion(context: Context) {
+        if (isGameCompleted) {
+            com.kooshmeen.sudoku.utils.StatisticsManager.recordCompletedGame(
+                context = context,
+                difficulty = difficulty,
+                score = highestPossibleScore(),
+                timeSeconds = elapsedTimeSeconds,
+                mistakes = mistakesCount
+            )
+        }
+    }
+
+    /**
      * Select a number from the input row
      */
     fun selectNumber(number: Int) {
@@ -340,6 +355,12 @@ class GameState {
                     newGrid[row][col] = cell.copy(notes = action.oldNotes[idx])
                 }
             }
+            is GameAction.AutofillNotes -> {
+                action.cells.forEachIndexed { idx, (row, col) ->
+                    val cell = grid[row][col]
+                    newGrid[row][col] = cell.copy(notes = action.oldNotes[idx])
+                }
+            }
         }
 
         grid = newGrid
@@ -469,5 +490,83 @@ class GameState {
                 savedState.solutionGrid[row][col]
             }
         }
+    }
+
+    /**
+     * Autofill all valid notes for empty cells
+     */
+    fun autofillNotes() {
+        val newGrid = Array(9) { r -> Array(9) { c -> grid[r][c] } }
+        val affectedCells = mutableListOf<Pair<Int, Int>>()
+        val oldNotes = mutableListOf<Set<Int>>()
+
+        for (row in 0..8) {
+            for (col in 0..8) {
+                val cell = grid[row][col]
+                if (cell.isEmpty && !cell.isOriginal) {
+                    val validNotes = getValidNotesForCell(row, col)
+                    if (validNotes != cell.notes) {
+                        affectedCells.add(Pair(row, col))
+                        oldNotes.add(cell.notes)
+                        newGrid[row][col] = cell.copy(notes = validNotes)
+                    }
+                }
+            }
+        }
+
+        // Only update grid and add to history if there were changes
+        if (affectedCells.isNotEmpty()) {
+            // Create action for undo
+            val action = GameAction.AutofillNotes(affectedCells, oldNotes)
+            actionHistory.push(action)
+            grid = newGrid
+        }
+    }
+
+    /**
+     * Get all valid notes for a cell based on current grid state
+     */
+    private fun getValidNotesForCell(row: Int, col: Int): Set<Int> {
+        val validNotes = mutableSetOf<Int>()
+
+        for (number in 1..9) {
+            if (isValidPlacement(row, col, number)) {
+                validNotes.add(number)
+            }
+        }
+
+        return validNotes
+    }
+
+    /**
+     * Check if placing a number at the given position would be valid
+     */
+    private fun isValidPlacement(row: Int, col: Int, number: Int): Boolean {
+        // Check row
+        for (c in 0..8) {
+            if (grid[row][c].value == number) {
+                return false
+            }
+        }
+
+        // Check column
+        for (r in 0..8) {
+            if (grid[r][col].value == number) {
+                return false
+            }
+        }
+
+        // Check 3x3 box
+        val boxRow = (row / 3) * 3
+        val boxCol = (col / 3) * 3
+        for (r in boxRow until boxRow + 3) {
+            for (c in boxCol until boxCol + 3) {
+                if (grid[r][c].value == number) {
+                    return false
+                }
+            }
+        }
+
+        return true
     }
 }

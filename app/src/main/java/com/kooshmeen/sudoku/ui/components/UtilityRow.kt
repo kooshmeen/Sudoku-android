@@ -27,13 +27,25 @@ fun UtilityRow(
     selectedButton: String? = null,
     onEraseClick: () -> Unit = {},
     onNotesClick: () -> Unit = {},
-    onUndoClick: () -> Unit = {}
+    onUndoClick: () -> Unit = {},
+    onAutofillNotesClick: () -> Unit = {}
 ) {
     Row(
         modifier = modifier,
         horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceEvenly,
         verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
     ) {
+        // Autofill Notes Button
+        IconButton(
+            onClick = onAutofillNotesClick,
+            modifier = Modifier.weight(1f)
+        ) {
+            Icon (
+                painter = painterResource(id = R.drawable.add_notes_24dp_e3e3e3_fill0_wght400_grad0_opsz24),
+                contentDescription = "Autofill Notes",
+                tint = MaterialTheme.colorScheme.onSurface
+            )
+        }
         // Erase Button
         IconToggleButton(
             checked = selectedButton == "erase",
