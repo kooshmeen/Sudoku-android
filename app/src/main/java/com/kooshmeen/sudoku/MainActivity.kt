@@ -23,6 +23,7 @@ import androidx.navigation.compose.rememberNavController
 import com.kooshmeen.sudoku.data.GameStateManager
 import com.kooshmeen.sudoku.ui.screens.AuthScreen
 import com.kooshmeen.sudoku.ui.screens.GameScreen
+import com.kooshmeen.sudoku.ui.screens.GroupsScreen
 import com.kooshmeen.sudoku.ui.screens.LeaderboardScreen
 import com.kooshmeen.sudoku.ui.screens.MainMenu
 import com.kooshmeen.sudoku.ui.screens.RecordScreen
@@ -66,6 +67,9 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onNavigateToSettings = {
                                     NavController.navigate("settings_screen")
+                                },
+                                onNavigateToGroups = {
+                                    NavController.navigate("groups_screen")
                                 },
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -149,6 +153,24 @@ class MainActivity : ComponentActivity() {
                                     .padding(innerPadding),
                                 isDarkTheme = isDarkTheme,
                                 onThemeToggle = { isDarkTheme = it }
+                            )
+                        }
+                    }
+                }
+                composable("groups_screen") {
+                    SudokuTheme(darkTheme = isDarkTheme) {
+                        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                            GroupsScreen(
+                                onNavigateBack = {
+                                    NavController.navigateUp()
+                                },
+                                onNavigateToGroupLeaderboard = { groupId ->
+                                    // Navigate to group leaderboard screen when implemented
+                                    // NavController.navigate("group_leaderboard/$groupId")
+                                },
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(innerPadding)
                             )
                         }
                     }

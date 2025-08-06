@@ -44,9 +44,20 @@ data class LeaderboardResponse(
 data class GroupData(
     val group_name: String,
     val group_description: String?,
-    val group_password: String?
+    val group_password: String?,
+    val id: Int? = null,
+    val created_by: Int? = null,
+    val created_at: String? = null,
+    val member_count: Int? = null,
+    val is_private: Boolean? = null,
+    val user_role: String? = null // "owner", "member", etc.
 )
 
 data class ApiResponse(
     val message: String
+)
+
+data class GroupsResponse(
+    val groups: List<GroupData>,
+    val total: Int? = null
 )

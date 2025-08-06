@@ -164,4 +164,160 @@ class SudokuRepository(private val context: Context) {
         authToken = null
         currentUser = null
     }
+
+    // Group Management Methods
+    suspend fun getAllGroups(): Result<List<GroupData>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getAllGroups()
+                if (response.isSuccessful) {
+                    response.body()?.let { groupsResponse ->
+                        Result.success(groupsResponse.groups)
+                    } ?: Result.failure(Exception("Empty response"))
+                } else {
+                    Result.failure(Exception("Failed to load groups: ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun searchGroups(query: String): Result<List<GroupData>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.searchGroups(query)
+                if (response.isSuccessful) {
+                    response.body()?.let { groupsResponse ->
+                        Result.success(groupsResponse.groups)
+                    } ?: Result.failure(Exception("Empty response"))
+                } else {
+                    Result.failure(Exception("Failed to search groups: ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun getMyGroups(): Result<List<GroupData>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val token = authToken ?: return@withContext Result.failure(Exception("Not logged in"))
+                val response = apiService.getMyGroups("Bearer $token")
+                if (response.isSuccessful) {
+                    response.body()?.let { Result.success(it) }
+                        ?: Result.failure(Exception("Empty response"))
+                } else {
+                    Result.failure(Exception("Failed to load my groups: ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun createGroup(groupName: String, description: String?, password: String?): Result<ApiResponse> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val token = authToken ?: return@withContext Result.failure(Exception("Not logged in"))
+                val groupData = GroupData(groupName, description, password)
+                val response = apiService.createGroup("Bearer $token", groupData)
+                if (response.isSuccessful) {
+                    response.body()?.let { Result.success(it) }
+                        ?: Result.failure(Exception("Empty response"))
+                } else {
+                    Result.failure(Exception("Failed to create group: ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun joinGroup(groupId: Int, password: String?): Result<ApiResponse> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val token = authToken ?: return@withContext Result.failure(Exception("Not logged in"))
+                val passwordMap = password?.let { mapOf("password" to it) }
+                val response = apiService.joinGroup("Bearer $token", groupId, passwordMap)
+                if (response.isSuccessful) {
+                    response.body()?.let { Result.success(it) }
+                        ?: Result.failure(Exception("Empty response"))
+                } else {
+                    Result.failure(Exception("Failed to join group: ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun leaveGroup(groupId: Int): Result<ApiResponse> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val token = authToken ?: return@withContext Result.failure(Exception("Not logged in"))
+                val response = apiService.leaveGroup("Bearer $token", groupId)
+                if (response.isSuccessful) {
+                    response.body()?.let { Result.success(it) }
+                        ?: Result.failure(Exception("Empty response"))
+                } else {
+                    Result.failure(Exception("Failed to leave group: ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun deleteGroup(groupId: Int): Result<ApiResponse> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val token = authToken ?: return@withContext Result.failure(Exception("Not logged in"))
+                val response = apiService.deleteGroup("Bearer $token", groupId)
+                if (response.isSuccessful) {
+                    response.body()?.let { Result.success(it) }
+                        ?: Result.failure(Exception("Empty response"))
+                } else {
+                    Result.failure(Exception("Failed to delete group: ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun getGroupDetails(groupId: Int): Result<GroupData> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val token = authToken ?: return@withContext Result.failure(Exception("Not logged in"))
+                val response = apiService.getGroupDetails("Bearer $token", groupId)
+                if (response.isSuccessful) {
+                    response.body()?.let { Result.success(it) }
+                        ?: Result.failure(Exception("Empty response"))
+                } else {
+                    Result.failure(Exception("Failed to load group details: ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun getGroupLeaderboard(groupId: Int): Result<LeaderboardResponse> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val token = authToken ?: return@withContext Result.failure(Exception("Not logged in"))
+                val response = apiService.getGroupLeaderboard("Bearer $token", groupId)
+                if (response.isSuccessful) {
+                    response.body()?.let { Result.success(it) }
+                        ?: Result.failure(Exception("Empty response"))
+                } else {
+                    Result.failure(Exception("Failed to load group leaderboard: ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
 }

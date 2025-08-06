@@ -62,7 +62,8 @@ fun MainMenu (
     onNavigateToRecords: () -> Unit = { /* Default no-op */ },
     onNavigateToLeaderboard: () -> Unit = { /* Default no-op */ },
     onNavigateToAuth: () -> Unit = { /* Default no-op */ },
-    onNavigateToSettings: () -> Unit = { /* Default no-op */ }
+    onNavigateToSettings: () -> Unit = { /* Default no-op */ },
+    onNavigateToGroups: () -> Unit = { /* Default no-op */ }
 ) {
     var isDifficultyDropdownOpen by remember { mutableStateOf(false) }
     var selectedDifficulty by remember { mutableStateOf("Easy") }
@@ -158,6 +159,19 @@ fun MainMenu (
                 }
             }
             Spacer(modifier = Modifier.weight(1f))
+            // Groups button
+            Button(
+                onClick = {
+                    if (isLoggedIn) {
+                        onNavigateToGroups()
+                    } else {
+                        onNavigateToAuth()
+                    }
+                },
+                modifier = Modifier.padding(vertical = 8.dp)
+            ) {
+                Text("Groups")
+            }
         }
 
         // Title

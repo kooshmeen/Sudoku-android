@@ -3,6 +3,7 @@ package com.kooshmeen.sudoku.api
 import com.kooshmeen.sudoku.data.api.ApiResponse
 import com.kooshmeen.sudoku.data.api.GameSubmission
 import com.kooshmeen.sudoku.data.api.GroupData
+import com.kooshmeen.sudoku.data.api.GroupsResponse
 import com.kooshmeen.sudoku.data.api.LeaderboardResponse
 import com.kooshmeen.sudoku.data.api.LoginRequest
 import com.kooshmeen.sudoku.data.api.LoginResponse
@@ -26,10 +27,10 @@ interface SudokuApiService {
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
 
     @GET("groups")
-    suspend fun getAllGroups(): Response<List<GroupData>>
+    suspend fun getAllGroups(): Response<GroupsResponse>
 
     @GET("groups/search")
-    suspend fun searchGroups(@Query("q") query: String): Response<List<GroupData>>
+    suspend fun searchGroups(@Query("q") query: String): Response<GroupsResponse>
 
     @GET("leaderboard/global")
     suspend fun getGlobalLeaderboard(): Response<LeaderboardResponse>
