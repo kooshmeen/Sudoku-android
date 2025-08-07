@@ -89,7 +89,7 @@ interface SudokuApiService {
     @GET("my-groups")
     suspend fun getMyGroups(
         @Header("Authorization") token: String
-    ): Response<List<GroupData>>
+    ): Response<GroupsResponse>
 
     @GET("groups/{groupId}")
     suspend fun getGroupDetails(
@@ -100,8 +100,14 @@ interface SudokuApiService {
     @POST("groups/{groupId}/join")
     suspend fun joinGroup(
         @Header("Authorization") token: String,
+        @Path("groupId") groupId: Int
+    ): Response<ApiResponse>
+
+    @POST("groups/{groupId}/join-with-password")
+    suspend fun joinGroupWithPassword(
+        @Header("Authorization") token: String,
         @Path("groupId") groupId: Int,
-        @Body password: Map<String, String>? = null
+        @Body password: Map<String, String>
     ): Response<ApiResponse>
 
     @DELETE("groups/{groupId}/leave")

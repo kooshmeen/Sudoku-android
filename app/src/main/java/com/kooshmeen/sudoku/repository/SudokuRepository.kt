@@ -206,8 +206,9 @@ class SudokuRepository(private val context: Context) {
                 val token = authToken ?: return@withContext Result.failure(Exception("Not logged in"))
                 val response = apiService.getMyGroups("Bearer $token")
                 if (response.isSuccessful) {
-                    response.body()?.let { Result.success(it) }
-                        ?: Result.failure(Exception("Empty response"))
+                    response.body()?.let { groupsResponse ->
+                        Result.success(groupsResponse.groups)
+                    } ?: Result.failure(Exception("Empty response"))
                 } else {
                     Result.failure(Exception("Failed to load my groups: ${response.message()}"))
                 }
@@ -239,8 +240,11 @@ class SudokuRepository(private val context: Context) {
         return withContext(Dispatchers.IO) {
             try {
                 val token = authToken ?: return@withContext Result.failure(Exception("Not logged in"))
-                val passwordMap = password?.let { mapOf("password" to it) }
-                val response = apiService.joinGroup("Bearer $token", groupId, passwordMap)
+                val response = if (password != null) {
+                    apiService.joinGroupWithPassword("Bearer $token", groupId, mapOf("password" to password))
+                } else {
+                    apiService.joinGroup("Bearer $token", groupId)
+                }
                 if (response.isSuccessful) {
                     response.body()?.let { Result.success(it) }
                         ?: Result.failure(Exception("Empty response"))
