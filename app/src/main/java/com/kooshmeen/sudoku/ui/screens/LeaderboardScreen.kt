@@ -47,6 +47,9 @@ fun LeaderboardScreen(
 
     val tabTitles = listOf("All Time", "This Month", "This Week", "Today")
 
+
+
+
     // Load leaderboard data based on selected tab
     LaunchedEffect(selectedTabIndex) {
         isLoading = true
@@ -60,6 +63,12 @@ fun LeaderboardScreen(
                 3 -> repository.getLeaderboardDay()
                 else -> repository.getLeaderboardTotal()
             }
+
+            // logging: log the response from repository for each leaderboard
+            println("Data for total: ${repository.getLeaderboardTotal()}")
+            println("Data for month: ${repository.getLeaderboardMonth()}")
+            println("Data for week: ${repository.getLeaderboardWeek()}")
+            println("Data for day: ${repository.getLeaderboardDay()}")
 
             result.fold(
                 onSuccess = { response ->
@@ -139,7 +148,7 @@ fun LeaderboardScreen(
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
-
+                
                 errorMessage != null -> {
                     Card(
                         modifier = Modifier
@@ -181,7 +190,7 @@ fun LeaderboardScreen(
                         }
                     }
                 }
-
+                
                 leaderboardData.isEmpty() -> {
                     Card(
                         modifier = Modifier
@@ -197,7 +206,7 @@ fun LeaderboardScreen(
                         )
                     }
                 }
-
+                
                 else -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
@@ -280,9 +289,12 @@ private fun LeaderboardItem(
                 overflow = TextOverflow.Ellipsis
             )
 
+            // log entry to console for debugging
+            println("--Leaderboard Entry: $entry")
+            
             // Score
             Text(
-                text = "${entry.score}",
+                text = "${entry.total_score}",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = when (rank) {
@@ -313,19 +325,19 @@ fun LeaderboardItemPreview() {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             LeaderboardItem(
-                entry = LeaderboardEntry(1, "GoldPlayer", 15000),
+                entry = LeaderboardEntry(1, "GoldPlayer", "15000"),
                 rank = 1
             )
             LeaderboardItem(
-                entry = LeaderboardEntry(2, "SilverChamp", 12500),
+                entry = LeaderboardEntry(2, "SilverChamp", "12500"),
                 rank = 2
             )
             LeaderboardItem(
-                entry = LeaderboardEntry(3, "BronzeMaster", 10000),
+                entry = LeaderboardEntry(3, "BronzeMaster", "10000"),
                 rank = 3
             )
             LeaderboardItem(
-                entry = LeaderboardEntry(4, "RegularPlayer", 8500),
+                entry = LeaderboardEntry(4, "RegularPlayer", "8500"),
                 rank = 4
             )
         }

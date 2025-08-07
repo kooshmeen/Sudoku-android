@@ -30,10 +30,15 @@ data class GameSubmission(
 )
 
 data class LeaderboardEntry(
-    val player_id: Int,
+    val id: Int,
     val username: String,
-    val score: Int,
-    val rank: Int? = null
+    val total_score: String, // Backend sends this as string
+    val total_games: String? = null, // Backend sends this as string
+    val best_overall_time: Int? = null,
+    val rank: Int? = null,
+    // Computed properties for backward compatibility
+    val player_id: Int = id,
+    val score: Int = total_score.toIntOrNull() ?: 0
 )
 
 data class LeaderboardResponse(
