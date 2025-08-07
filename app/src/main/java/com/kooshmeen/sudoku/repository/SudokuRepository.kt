@@ -222,8 +222,16 @@ class SudokuRepository(private val context: Context) {
         return withContext(Dispatchers.IO) {
             try {
                 val token = authToken ?: return@withContext Result.failure(Exception("Not logged in"))
-                val groupData = GroupData(groupName, description, password)
-                val response = apiService.createGroup("Bearer $token", groupData)
+                // Create a map to send only the necessary data to the server
+                val groupRequest = mutableMapOf<String, Any?>(
+                    "group_name" to groupName,
+                    "group_description" to description
+                )
+                if (password != null) {
+                    groupRequest["group_password"] = password
+                }
+
+                val response = apiService.createGroup("Bearer $token", groupRequest)
                 if (response.isSuccessful) {
                     response.body()?.let { Result.success(it) }
                         ?: Result.failure(Exception("Empty response"))

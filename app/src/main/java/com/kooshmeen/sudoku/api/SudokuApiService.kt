@@ -83,7 +83,7 @@ interface SudokuApiService {
     @POST("groups")
     suspend fun createGroup(
         @Header("Authorization") token: String,
-        @Body groupData: GroupData
+        @Body groupRequest: Map<String, Any?>
     ): Response<ApiResponse>
 
     @GET("my-groups")
