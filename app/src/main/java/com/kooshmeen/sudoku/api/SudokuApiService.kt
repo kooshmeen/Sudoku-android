@@ -3,6 +3,7 @@ package com.kooshmeen.sudoku.api
 import com.kooshmeen.sudoku.data.api.ApiResponse
 import com.kooshmeen.sudoku.data.api.GameSubmission
 import com.kooshmeen.sudoku.data.api.GroupData
+import com.kooshmeen.sudoku.data.api.GroupMembersResponse
 import com.kooshmeen.sudoku.data.api.GroupsResponse
 import com.kooshmeen.sudoku.data.api.LeaderboardResponse
 import com.kooshmeen.sudoku.data.api.LoginRequest
@@ -128,6 +129,13 @@ interface SudokuApiService {
         @Header("Authorization") token: String,
         @Path("groupId") groupId: Int
     ): Response<LeaderboardResponse>
+
+    // Group members
+    @GET("groups/{groupId}")
+    suspend fun getGroupMembers(
+        @Header("Authorization") token: String,
+        @Path("groupId") groupId: Int
+    ): Response<GroupMembersResponse>
 
     // Group member management (leaders only)
     @PUT("groups/{groupId}/members/{memberId}/role")

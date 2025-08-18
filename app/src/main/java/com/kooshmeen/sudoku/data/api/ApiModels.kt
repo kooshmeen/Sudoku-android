@@ -65,3 +65,16 @@ data class GroupsResponse(
     val groups: List<GroupData>,
     val total: Int? = null
 )
+
+data class GroupMember(
+    val id: Int,
+    val username: String?,
+    val email: String? = null,
+    val role: String?, // 'leader', 'member', etc.
+    val joined_at: String? = null
+)
+
+data class GroupMembersResponse(
+    val members: List<GroupMember>,
+    val total: Int? = null
+)

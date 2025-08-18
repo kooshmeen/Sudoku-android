@@ -41,7 +41,8 @@ import kotlinx.coroutines.launch
 fun GroupsScreen(
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {},
-    onNavigateToGroupLeaderboard: (Int) -> Unit = {}
+    onNavigateToGroupLeaderboard: (Int) -> Unit = {},
+    onNavigateToGroupMembers: (GroupData) -> Unit = {}
 ) {
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     var allGroups by remember { mutableStateOf<List<GroupData>>(emptyList()) }
@@ -379,6 +380,9 @@ fun GroupsScreen(
                                 },
                                 onLeaderboardClick = { groupId ->
                                     onNavigateToGroupLeaderboard(groupId)
+                                },
+                                onViewMembersClick = { group ->
+                                    onNavigateToGroupMembers(group)
                                 }
                             )
                         }
@@ -462,7 +466,8 @@ private fun GroupCard(
     onJoinClick: () -> Unit,
     onLeaveClick: (Int) -> Unit,
     onDeleteClick: (Int) -> Unit,
-    onLeaderboardClick: (Int) -> Unit
+    onLeaderboardClick: (Int) -> Unit,
+    onViewMembersClick: (GroupData) -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -552,12 +557,21 @@ private fun GroupCard(
                 Column {
                     if (isMyGroup) {
                         // Actions for groups the user is in
-                        IconButton(onClick = { group.id?.let { onLeaderboardClick(it) } }) {
-                            Icon(
-                                imageVector = Icons.Default.Leaderboard,
-                                contentDescription = "View Leaderboard",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
+                        Row {
+                            IconButton(onClick = { onViewMembersClick(group) }) {
+                                Icon(
+                                    imageVector = Icons.Default.People,
+                                    contentDescription = "View Members",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            IconButton(onClick = { group.id?.let { onLeaderboardClick(it) } }) {
+                                Icon(
+                                    imageVector = Icons.Default.Leaderboard,
+                                    contentDescription = "View Leaderboard",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                         if (group.user_role == "owner") {
                             IconButton(onClick = { group.id?.let { onDeleteClick(it) } }) {

@@ -332,4 +332,22 @@ class SudokuRepository(private val context: Context) {
             }
         }
     }
+
+    suspend fun getGroupMembers(groupId: Int): Result<List<GroupMember>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val token = authToken ?: return@withContext Result.failure(Exception("Not logged in"))
+                val response = apiService.getGroupMembers("Bearer $token", groupId)
+                if (response.isSuccessful) {
+                    response.body()?.let { groupMembersResponse ->
+                        Result.success(groupMembersResponse.members)
+                    } ?: Result.failure(Exception("Empty response"))
+                } else {
+                    Result.failure(Exception("Failed to load group members: ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
 }

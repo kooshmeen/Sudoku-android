@@ -21,8 +21,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.kooshmeen.sudoku.data.GameStateManager
+import com.kooshmeen.sudoku.data.api.GroupData
 import com.kooshmeen.sudoku.ui.screens.AuthScreen
 import com.kooshmeen.sudoku.ui.screens.GameScreen
+import com.kooshmeen.sudoku.ui.screens.GroupMembersScreen
 import com.kooshmeen.sudoku.ui.screens.GroupsScreen
 import com.kooshmeen.sudoku.ui.screens.LeaderboardScreen
 import com.kooshmeen.sudoku.ui.screens.MainMenu
@@ -168,10 +170,35 @@ class MainActivity : ComponentActivity() {
                                     // Navigate to group leaderboard screen when implemented
                                     // NavController.navigate("group_leaderboard/$groupId")
                                 },
+                                onNavigateToGroupMembers = { group ->
+                                    // Pass only the group ID as a navigation argument
+                                    group.id?.let { groupId ->
+                                        NavController.navigate("group_members_screen/$groupId")
+                                    }
+                                },
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(innerPadding)
                             )
+                        }
+                    }
+                }
+                composable("group_members_screen/{groupId}") { backStackEntry ->
+                    SudokuTheme(darkTheme = isDarkTheme) {
+                        val groupId = backStackEntry.arguments?.getString("groupId")?.toIntOrNull()
+
+                        if (groupId != null) {
+                            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                                GroupMembersScreen(
+                                    groupId = groupId,
+                                    onNavigateBack = {
+                                        NavController.navigateUp()
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(innerPadding)
+                                )
+                            }
                         }
                     }
                 }

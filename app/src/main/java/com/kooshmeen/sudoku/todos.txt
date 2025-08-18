@@ -1,10 +1,9 @@
 TODO for adding multiplayer/other functionalities which include a server:
-add leaderboard support - overall -----------------------------------------------------------------
-add groups functionality - create groups, join groups, view group leaderboards
+add groups functionality - create groups--, join groups--, view group leaderboards
 add medals for top of group every week, month, day etc
 add way to challenge friends (same puzzle, best time wins, maybe mistake count etc)
 
-group: nume grup, hash unic (id ul grupului), nume creator, data crearii, numar membri
-parola: optional, daca nu e setata, se poate intra fara parola
-
 NAT punch through
+
+-When a leader leaves a group, another member at random is promoted to leader. If no other member exists, the group is deleted (if private).
+-When a user is logged in but their token is expired, they are automatically logged out
