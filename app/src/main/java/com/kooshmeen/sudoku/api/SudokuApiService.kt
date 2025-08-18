@@ -1,6 +1,10 @@
 package com.kooshmeen.sudoku.api
 
 import com.kooshmeen.sudoku.data.api.ApiResponse
+import com.kooshmeen.sudoku.data.api.ChallengeCompletionRequest
+import com.kooshmeen.sudoku.data.api.ChallengeCompletionResponse
+import com.kooshmeen.sudoku.data.api.ChallengesResponse
+import com.kooshmeen.sudoku.data.api.CreateChallengeRequest
 import com.kooshmeen.sudoku.data.api.GameSubmission
 import com.kooshmeen.sudoku.data.api.GroupData
 import com.kooshmeen.sudoku.data.api.GroupMembersResponse
@@ -153,4 +157,30 @@ interface SudokuApiService {
         @Path("playerId") playerId: Int,
         @Body medalData: Map<String, Any>
     ): Response<ApiResponse>
+
+    // Challenge endpoints
+    @POST("groups/{groupId}/challenge")
+    suspend fun createChallenge(
+        @Header("Authorization") token: String,
+        @Path("groupId") groupId: Int,
+        @Body request: CreateChallengeRequest
+    ): Response<ApiResponse>
+
+    @GET("challenges/pending")
+    suspend fun getPendingChallenges(
+        @Header("Authorization") token: String
+    ): Response<ChallengesResponse>
+
+    @POST("challenges/{challengeId}/accept")
+    suspend fun acceptChallenge(
+        @Header("Authorization") token: String,
+        @Path("challengeId") challengeId: Int
+    ): Response<Map<String, Any>>
+
+    @POST("challenges/{challengeId}/complete")
+    suspend fun completeChallenge(
+        @Header("Authorization") token: String,
+        @Path("challengeId") challengeId: Int,
+        @Body request: ChallengeCompletionRequest
+    ): Response<ChallengeCompletionResponse>
 }

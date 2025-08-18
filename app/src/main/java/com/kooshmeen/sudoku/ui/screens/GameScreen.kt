@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -35,30 +36,61 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kooshmeen.sudoku.data.GameState
 import com.kooshmeen.sudoku.data.GameStateManager
+import com.kooshmeen.sudoku.repository.SudokuRepository
 import com.kooshmeen.sudoku.ui.components.InputRow
 import com.kooshmeen.sudoku.ui.components.SudokuGrid
 import com.kooshmeen.sudoku.ui.components.UtilityRow
 import com.kooshmeen.sudoku.ui.theme.SudokuTheme
 import com.kooshmeen.sudoku.utils.BestTimeManager
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun GameScreen(
     modifier: Modifier = Modifier,
     onThemeToggle: (Boolean) -> Unit = { /* Default no-op */ },
     isDarkTheme: Boolean = true, // Default value for dark theme
-    onNavigateToMenu: () -> Unit = { /* Default no-op */ }
+    onNavigateToMenu: () -> Unit = { /* Default no-op */ },
+    challengeId: Int? = null // Optional challenge ID for challenges mode
 ) {
     val gameState = GameStateManager.gameState
     var showCompletionDialog by remember { mutableStateOf(false) }
+
+    var opponentTime by remember { mutableStateOf<Int?>(null) }
+    var isChallenge by remember { mutableStateOf(challengeId != null) }
+    var challengeData by remember { mutableStateOf<Map<String, Any>?>(null) }
+
+    val context = LocalContext.current
+    val repository = remember { SudokuRepository(context) }
+    val scope = rememberCoroutineScope()
+
+    // Load challenge data if this is a challenge game
+    LaunchedEffect(challengeId) {
+        challengeId?.let { id ->
+            scope.launch {
+                val result = repository.acceptChallenge(id)
+                result.fold(
+                    onSuccess = { data ->
+                        challengeData = data
+                        opponentTime = (data["challengerTime"] as? Number)?.toInt()
+                    },
+                    onFailure = { exception ->
+                        // Handle error loading challenge data
+                    }
+                )
+            }
+        }
+    }
 
     // Timer effect - only run when game is active and not paused
     LaunchedEffect(gameState.isGameActive, gameState.isPaused) {
@@ -90,6 +122,10 @@ fun GameScreen(
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(start = 8.dp)
             )
+
+            // If in challenge mode, show opponent's time
+
+
             Spacer(Modifier.weight(1f)) // Push the difficulty indicator to the end
             // Difficulty indicator
             Text(
@@ -112,6 +148,28 @@ fun GameScreen(
                     tint = MaterialTheme.colorScheme.onBackground // Use MaterialTheme for icon color
                 )
             }
+
+            if (isChallenge && opponentTime != null) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.Accessibility,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.secondary
+                    )
+                    Text(
+                        text = formatTime(opponentTime!!),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    Text(
+                        text = "Opponent",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
             Spacer(Modifier.weight(1f)) // Push the pause button to the end
             // Pause button - will pause timer, but cover the grid
             IconButton(
@@ -245,6 +303,26 @@ fun GameScreen(
                     // For now, we will just log it
                     println("Score submission failed. Please try again later.")
                 }
+
+                // challenge
+                if (isChallenge && challengeData != null) {
+                    // Submit the score to the server for challenges
+                    val challengeResult = repository.completeChallenge(
+                        challengeId = challengeId!!,
+                        timeSeconds = gameState.elapsedTimeSeconds,
+                        numberOfMistakes = gameState.mistakesCount
+                    )
+                    challengeResult.fold(
+                        onSuccess = {
+                            // Successfully submitted challenge score
+                            println("Challenge score submitted successfully.")
+                        },
+                        onFailure = { exception ->
+                            // Handle error submitting challenge score
+                            println("Error submitting challenge score: ${exception.message}")
+                        }
+                    )
+                }
             }
 
             GameStateManager.endGame()
@@ -285,6 +363,12 @@ fun GameScreen(
             )
         }
     }
+}
+
+private fun formatTime(seconds: Int): String {
+    val minutes = seconds / 60
+    val remainingSeconds = seconds % 60
+    return String.format("%02d:%02d", minutes, remainingSeconds)
 }
 
 @Preview(showBackground = true)

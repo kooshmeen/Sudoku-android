@@ -5,6 +5,7 @@
 
 package com.kooshmeen.sudoku.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -46,6 +47,9 @@ fun GroupMembersScreen(
     var members by remember { mutableStateOf<List<GroupMember>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    var showChallengeDialog by remember { mutableStateOf(false) }
+    var selectedMemberId by remember { mutableStateOf<Int?>(null) }
 
     val context = LocalContext.current
     val repository = remember { SudokuRepository(context) }
@@ -231,6 +235,23 @@ fun GroupMembersScreen(
                                     member = member,
                                     isCurrentUser = repository.fetchCurrentUser()?.id == member.id
                                 )
+                                // Dont show challenge button for self
+                                if (member.player_id != repository.fetchCurrentUser()?.id) {
+                                    IconButton(
+                                        onClick = {
+                                            // Show challenge dialog
+                                            showChallengeDialog = true
+                                            selectedMemberId = member.player_id
+                                            Log.d("GroupMembersScreen", "Selected member for challenge: ${member.username} with ID ${member.player_id}")
+                                        }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.SportsEsports,
+                                            contentDescription = "Challenge Player",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -271,6 +292,26 @@ fun GroupMembersScreen(
                 }
             }
         }
+    }
+    if (showChallengeDialog && selectedMemberId != null) {
+        ChallengeDialog(
+            onDismiss = { showChallengeDialog = false },
+            onChallengeCreated = { difficulty ->
+                scope.launch {
+                    val result = repository.createChallenge(groupId, selectedMemberId!!, difficulty)
+                    result.fold(
+                        onSuccess = { message ->
+                            // Show success message
+                            showChallengeDialog = false
+                        },
+                        onFailure = { exception ->
+                            errorMessage = exception.message
+                            showChallengeDialog = false
+                        }
+                    )
+                }
+            }
+        )
     }
 }
 
@@ -425,6 +466,49 @@ private fun EmptyMembersMessage(
             modifier = Modifier.padding(top = 8.dp)
         )
     }
+}
+
+@Composable
+private fun ChallengeDialog(
+    onDismiss: () -> Unit,
+    onChallengeCreated: (String) -> Unit
+) {
+    var selectedDifficulty by remember { mutableStateOf("medium") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Create Challenge") },
+        text = {
+            Column {
+                Text("Select difficulty for the challenge:")
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf("easy", "medium", "hard").forEach { difficulty ->
+                        FilterChip(
+                            onClick = { selectedDifficulty = difficulty },
+                            label = { Text(difficulty.uppercase()) },
+                            selected = selectedDifficulty == difficulty
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onChallengeCreated(selectedDifficulty) }
+            ) {
+                Text("Create Challenge")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 private fun formatJoinDate(dateString: String): String {

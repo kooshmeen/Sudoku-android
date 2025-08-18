@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
@@ -63,7 +64,8 @@ fun MainMenu (
     onNavigateToLeaderboard: () -> Unit = { /* Default no-op */ },
     onNavigateToAuth: () -> Unit = { /* Default no-op */ },
     onNavigateToSettings: () -> Unit = { /* Default no-op */ },
-    onNavigateToGroups: () -> Unit = { /* Default no-op */ }
+    onNavigateToGroups: () -> Unit = { /* Default no-op */ },
+    onNavigateToChallenges: () -> Unit = { /* Default no-op */ }
 ) {
     var isDifficultyDropdownOpen by remember { mutableStateOf(false) }
     var selectedDifficulty by remember { mutableStateOf("Easy") }
@@ -158,7 +160,20 @@ fun MainMenu (
                     Text("Login")
                 }
             }
-            Spacer(modifier = Modifier.weight(1f))
+
+            // Add this button/item to access challenges
+            OutlinedButton(
+                onClick = { onNavigateToChallenges() },
+                modifier = Modifier.padding(vertical = 8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.SportsEsports,
+                    contentDescription = null
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Invitations")
+            }
+            //Spacer(modifier = Modifier.weight(1f))
             // Groups button
             Button(
                 onClick = {

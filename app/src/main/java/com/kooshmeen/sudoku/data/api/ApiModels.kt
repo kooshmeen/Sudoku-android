@@ -68,13 +68,69 @@ data class GroupsResponse(
 
 data class GroupMember(
     val id: Int,
+    val group_id: Int,
+    val player_id: Int,
     val username: String?,
     val email: String? = null,
     val role: String?, // 'leader', 'member', etc.
-    val joined_at: String? = null
+    val joined_at: String? = null,
+    val wins: Int? = null,
+    val losses: Int? = null,
+    val draws: Int? = null
 )
 
 data class GroupMembersResponse(
     val members: List<GroupMember>,
     val total: Int? = null
+)
+
+/**
+ * Data class for challenge invitations
+ */
+data class ChallengeInvitation(
+    val id: Int,
+    val challenger_id: Int,
+    val challenged_id: Int,
+    val group_id: Int,
+    val difficulty: String,
+    val challenger_name: String,
+    val group_name: String,
+    val challenger_time: Int?,
+    val status: String,
+    val created_at: String
+)
+
+/**
+ * Data class for creating a challenge
+ */
+data class CreateChallengeRequest(
+    val challengedId: Int,
+    val difficulty: String
+)
+
+/**
+ * Data class for challenge completion
+ */
+data class ChallengeCompletionRequest(
+    val timeSeconds: Int,
+    val numberOfMistakes: Int
+)
+
+/**
+ * Data class for challenge completion response
+ */
+data class ChallengeCompletionResponse(
+    val message: String,
+    val winner: String?,
+    val challengerScore: Int?,
+    val challengedScore: Int?,
+    val challengerTime: Int?,
+    val challengedTime: Int?
+)
+
+/**
+ * Response wrapper for challenges list
+ */
+data class ChallengesResponse(
+    val challenges: List<ChallengeInvitation>
 )

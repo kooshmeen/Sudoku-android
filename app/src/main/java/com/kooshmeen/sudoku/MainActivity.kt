@@ -17,12 +17,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.kooshmeen.sudoku.data.GameStateManager
-import com.kooshmeen.sudoku.data.api.GroupData
 import com.kooshmeen.sudoku.ui.screens.AuthScreen
+import com.kooshmeen.sudoku.ui.screens.ChallengeResultScreen
+import com.kooshmeen.sudoku.ui.screens.ChallengesScreen
 import com.kooshmeen.sudoku.ui.screens.GameScreen
 import com.kooshmeen.sudoku.ui.screens.GroupMembersScreen
 import com.kooshmeen.sudoku.ui.screens.GroupsScreen
@@ -50,13 +53,13 @@ class MainActivity : ComponentActivity() {
                         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                             MainMenu(
                                 onNavigateToGame = {
-                                    NavController.navigate("game_screen")
+                                    NavController.navigate("game/medium")
                                 },
                                 onContinueGame = {
-                                    NavController.navigate("game_screen")
+                                    NavController.navigate("game/medium")
                                 },
                                 onStartNewGame = { difficulty ->
-                                    NavController.navigate("game_screen")
+                                    NavController.navigate("game/$difficulty")
                                 },
                                 onNavigateToRecords = {
                                     NavController.navigate("record_screen")
@@ -72,6 +75,9 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onNavigateToGroups = {
                                     NavController.navigate("groups_screen")
+                                },
+                                onNavigateToChallenges = {
+                                    NavController.navigate("challenges_screen")
                                 },
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -101,16 +107,32 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
-                composable("game_screen") {
+                composable(
+                    "game/{difficulty}?challengeId={challengeId}",
+                    arguments = listOf(
+                        navArgument("difficulty") { type = NavType.StringType },
+                        navArgument("challengeId") {
+                            type = NavType.StringType
+                            nullable = true
+                            defaultValue = null
+                        }
+                    )
+                ) { backStackEntry ->
                     SudokuTheme(darkTheme = isDarkTheme) {
+                        val difficulty = backStackEntry.arguments?.getString("difficulty") ?: "medium"
+                        val challengeIdString = backStackEntry.arguments?.getString("challengeId")
+                        val challengeId = challengeIdString?.takeIf { it != "null" }?.toIntOrNull()
+
                         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                             GameScreen(
-                                onNavigateToMenu = {
-                                    NavController.navigateUp()
-                                },
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(innerPadding),
+                                onThemeToggle = { isDarkTheme = it },
+                                isDarkTheme = isDarkTheme,
+                                onNavigateToMenu = {
+                                    NavController.navigateUp()
+                                }
                             )
                         }
                     }
@@ -199,6 +221,46 @@ class MainActivity : ComponentActivity() {
                                         .padding(innerPadding)
                                 )
                             }
+                        }
+                    }
+                }
+                composable("challenges_screen") {
+                    SudokuTheme(darkTheme = isDarkTheme) {
+                        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                            ChallengesScreen(
+                                onNavigateBack = {
+                                    NavController.navigateUp()
+                                },
+                                onNavigateToGame = { difficulty, challengeId ->
+                                    // Navigate to game with challenge context
+                                    NavController.navigate("game/$difficulty?challengeId=$challengeId")
+                                },
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(innerPadding)
+                            )
+                        }
+                    }
+                }
+                composable("challenge_result/{challengeId}/{timeSeconds}/{mistakes}") { backStackEntry ->
+                    SudokuTheme(darkTheme = isDarkTheme) {
+                        val challengeId = backStackEntry.arguments?.getString("challengeId")?.toIntOrNull() ?: 0
+                        val timeSeconds = backStackEntry.arguments?.getString("timeSeconds")?.toIntOrNull() ?: 0
+                        val mistakes = backStackEntry.arguments?.getString("mistakes")?.toIntOrNull() ?: 0
+
+                        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                            ChallengeResultScreen(
+                                challengeId = challengeId,
+                                timeSeconds = timeSeconds,
+                                mistakes = mistakes,
+                                onNavigateBack = {
+                                    // Navigate back to challenges or groups
+                                    NavController.popBackStack("challenges_screen", false)
+                                },
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(innerPadding)
+                            )
                         }
                     }
                 }

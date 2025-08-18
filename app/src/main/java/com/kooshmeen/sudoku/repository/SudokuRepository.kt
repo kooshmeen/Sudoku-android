@@ -1,6 +1,7 @@
 package com.kooshmeen.sudoku.repository
 
 import android.content.Context
+import android.util.Log
 import com.kooshmeen.sudoku.api.ApiClient
 import com.kooshmeen.sudoku.data.api.*
 import kotlinx.coroutines.Dispatchers
@@ -348,6 +349,97 @@ class SudokuRepository(private val context: Context) {
             } catch (e: Exception) {
                 Result.failure(e)
             }
+        }
+    }
+
+    /**
+     * Create a challenge invitation
+     */
+    suspend fun createChallenge(
+        groupId: Int,
+        challengedId: Int,
+        difficulty: String
+    ): Result<String> {
+        return try {
+            val token = authToken ?: return Result.failure(Exception("Not authenticated"))
+            Log.d("SudokuRepository", "Token: ${token?.take(20)}...") // Log first 20 chars
+            Log.d("SudokuRepository", "Creating challenge: groupId=$groupId, challengedId=$challengedId, difficulty=$difficulty")
+
+            val request = CreateChallengeRequest(challengedId, difficulty)
+            val response = apiService.createChallenge("Bearer $token", groupId, request)
+
+            Log.d("SudokuRepository", "Response code: ${response.code()}")
+            if (!response.isSuccessful) {
+                Log.e("SudokuRepository", "Error body: ${response.errorBody()?.string()}")
+            }
+
+            if (response.isSuccessful) {
+                Result.success(response.body()?.message ?: "Challenge created successfully")
+            } else {
+                Result.failure(Exception("Failed to create challenge: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Get pending challenges for current user
+     */
+    suspend fun getPendingChallenges(): Result<List<ChallengeInvitation>> {
+        return try {
+            val token = authToken ?: return Result.failure(Exception("Not authenticated"))
+            val response = apiService.getPendingChallenges("Bearer $token")
+
+            if (response.isSuccessful) {
+                val challenges = response.body()?.challenges ?: emptyList()
+                Result.success(challenges)
+            } else {
+                Result.failure(Exception("Failed to get challenges: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Accept a challenge invitation
+     */
+    suspend fun acceptChallenge(challengeId: Int): Result<Map<String, Any>> {
+        return try {
+            val token = authToken ?: return Result.failure(Exception("Not authenticated"))
+            val response = apiService.acceptChallenge("Bearer $token", challengeId)
+
+            if (response.isSuccessful) {
+                Result.success(response.body() ?: emptyMap())
+            } else {
+                Result.failure(Exception("Failed to accept challenge: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Complete a challenge
+     */
+    suspend fun completeChallenge(
+        challengeId: Int,
+        timeSeconds: Int,
+        numberOfMistakes: Int
+    ): Result<ChallengeCompletionResponse> {
+        return try {
+            val token = authToken ?: return Result.failure(Exception("Not authenticated"))
+            val request = ChallengeCompletionRequest(timeSeconds, numberOfMistakes)
+            val response = apiService.completeChallenge("Bearer $token", challengeId, request)
+
+            if (response.isSuccessful) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Failed to complete challenge: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 }
