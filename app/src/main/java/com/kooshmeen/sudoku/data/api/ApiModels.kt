@@ -101,14 +101,6 @@ data class ChallengeInvitation(
 )
 
 /**
- * Data class for creating a challenge
- */
-data class CreateChallengeRequest(
-    val challengedId: Int,
-    val difficulty: String
-)
-
-/**
  * Data class for challenge completion
  */
 data class ChallengeCompletionRequest(
@@ -133,4 +125,40 @@ data class ChallengeCompletionResponse(
  */
 data class ChallengesResponse(
     val challenges: List<ChallengeInvitation>
+)
+
+/**
+ * Data class for creating a challenge with type
+ */
+data class CreateChallengeRequest(
+    val challengedId: Int,
+    val difficulty: String,
+    val challengeType: String // "online" or "offline"
+)
+
+/**
+ * Data class for challenge creation response
+ */
+data class ChallengeCreationResponse(
+    val message: String,
+    val challengeId: Int?,
+    val matchId: Int?,
+    val puzzleData: Map<String, Any>?,
+    val requiresChallengerCompletion: Boolean?,
+    val status: String?
+)
+
+/**
+ * Data class for live matches
+ */
+data class LiveMatch(
+    val id: Int,
+    val challenger_id: Int,
+    val challenged_id: Int,
+    val group_id: Int,
+    val difficulty: String,
+    val challenger_name: String,
+    val group_name: String,
+    val status: String,
+    val created_at: String
 )

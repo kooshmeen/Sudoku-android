@@ -353,30 +353,64 @@ class SudokuRepository(private val context: Context) {
     }
 
     /**
-     * Create a challenge invitation
+     * Create a challenge invitation with type
      */
     suspend fun createChallenge(
         groupId: Int,
         challengedId: Int,
-        difficulty: String
+        difficulty: String,
+        challengeType: String
+    ): Result<ChallengeCreationResponse> {
+        return try {
+            val token = authToken ?: return Result.failure(Exception("Not authenticated"))
+            val request = CreateChallengeRequest(challengedId, difficulty, challengeType)
+            val response = apiService.createChallenge("Bearer $token", groupId, request)
+
+            if (response.isSuccessful) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Failed to create challenge: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Reject a challenge invitation
+     */
+    suspend fun rejectChallenge(challengeId: Int): Result<String> {
+        return try {
+            val token = authToken ?: return Result.failure(Exception("Not authenticated"))
+            val response = apiService.rejectChallenge("Bearer $token", challengeId)
+
+            if (response.isSuccessful) {
+                Result.success(response.body()?.message ?: "Challenge rejected")
+            } else {
+                Result.failure(Exception("Failed to reject challenge: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Complete challenger's game for offline challenges
+     */
+    suspend fun completeChallengerGame(
+        challengeId: Int,
+        timeSeconds: Int,
+        numberOfMistakes: Int
     ): Result<String> {
         return try {
             val token = authToken ?: return Result.failure(Exception("Not authenticated"))
-            Log.d("SudokuRepository", "Token: ${token?.take(20)}...") // Log first 20 chars
-            Log.d("SudokuRepository", "Creating challenge: groupId=$groupId, challengedId=$challengedId, difficulty=$difficulty")
-
-            val request = CreateChallengeRequest(challengedId, difficulty)
-            val response = apiService.createChallenge("Bearer $token", groupId, request)
-
-            Log.d("SudokuRepository", "Response code: ${response.code()}")
-            if (!response.isSuccessful) {
-                Log.e("SudokuRepository", "Error body: ${response.errorBody()?.string()}")
-            }
+            val request = ChallengeCompletionRequest(timeSeconds, numberOfMistakes)
+            val response = apiService.completeChallengerGame("Bearer $token", challengeId, request)
 
             if (response.isSuccessful) {
-                Result.success(response.body()?.message ?: "Challenge created successfully")
+                Result.success(response.body()?.message ?: "Game completed")
             } else {
-                Result.failure(Exception("Failed to create challenge: ${response.code()}"))
+                Result.failure(Exception("Failed to complete game: ${response.code()}"))
             }
         } catch (e: Exception) {
             Result.failure(e)

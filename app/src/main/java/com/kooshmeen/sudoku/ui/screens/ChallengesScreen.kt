@@ -162,7 +162,8 @@ fun ChallengesScreen(
 @Composable
 private fun ChallengeCard(
     challenge: ChallengeInvitation,
-    onAcceptChallenge: (Int) -> Unit
+    onAcceptChallenge: (Int) -> Unit,
+    onRejectChallenge: (Int) -> Unit = { _ -> }
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -249,6 +250,22 @@ private fun ChallengeCard(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Accept Challenge")
+            }
+            // Reject button
+            OutlinedButton(
+                onClick = { onRejectChallenge(challenge.id) },
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Reject")
             }
         }
     }

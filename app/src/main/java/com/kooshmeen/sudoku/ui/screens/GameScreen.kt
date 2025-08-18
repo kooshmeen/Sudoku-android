@@ -61,7 +61,8 @@ fun GameScreen(
     onThemeToggle: (Boolean) -> Unit = { /* Default no-op */ },
     isDarkTheme: Boolean = true, // Default value for dark theme
     onNavigateToMenu: () -> Unit = { /* Default no-op */ },
-    challengeId: Int? = null // Optional challenge ID for challenges mode
+    challengeId: Int? = null, // Optional challenge ID for challenges mode
+    difficulty: String? = null // Optional difficulty override for challenges
 ) {
     val gameState = GameStateManager.gameState
     var showCompletionDialog by remember { mutableStateOf(false) }
@@ -75,19 +76,14 @@ fun GameScreen(
     val scope = rememberCoroutineScope()
 
     // Load challenge data if this is a challenge game
-    LaunchedEffect(challengeId) {
+    LaunchedEffect(challengeId, difficulty) {
         challengeId?.let { id ->
-            scope.launch {
-                val result = repository.acceptChallenge(id)
-                result.fold(
-                    onSuccess = { data ->
-                        challengeData = data
-                        opponentTime = (data["challengerTime"] as? Number)?.toInt()
-                    },
-                    onFailure = { exception ->
-                        // Handle error loading challenge data
-                    }
-                )
+            isChallenge = true
+            // For offline challenges, the challenger starts immediately with a new puzzle
+            // No need to "accept" the challenge as they created it
+            difficulty?.let { diff ->
+                // Start a new game with the specified difficulty for the challenge
+                GameStateManager.startNewGame(diff, context)
             }
         }
     }
@@ -304,22 +300,22 @@ fun GameScreen(
                     println("Score submission failed. Please try again later.")
                 }
 
-                // challenge
-                if (isChallenge && challengeData != null) {
-                    // Submit the score to the server for challenges
-                    val challengeResult = repository.completeChallenge(
-                        challengeId = challengeId!!,
+                // challenge - handle offline challenges differently
+                if (isChallenge && challengeId != null) {
+                    // For offline challenges, the challenger uses a different endpoint
+                    val challengeResult = repository.completeChallengerGame(
+                        challengeId = challengeId,
                         timeSeconds = gameState.elapsedTimeSeconds,
                         numberOfMistakes = gameState.mistakesCount
                     )
                     challengeResult.fold(
                         onSuccess = {
-                            // Successfully submitted challenge score
-                            println("Challenge score submitted successfully.")
+                            // Successfully submitted challenger's game completion
+                            println("Challenger game completed successfully.")
                         },
                         onFailure = { exception ->
-                            // Handle error submitting challenge score
-                            println("Error submitting challenge score: ${exception.message}")
+                            // Handle error submitting challenger's game
+                            println("Error submitting challenger game: ${exception.message}")
                         }
                     )
                 }

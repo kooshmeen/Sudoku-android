@@ -132,7 +132,9 @@ class MainActivity : ComponentActivity() {
                                 isDarkTheme = isDarkTheme,
                                 onNavigateToMenu = {
                                     NavController.navigateUp()
-                                }
+                                },
+                                challengeId = challengeId,
+                                difficulty = difficulty
                             )
                         }
                     }
@@ -215,6 +217,10 @@ class MainActivity : ComponentActivity() {
                                     groupId = groupId,
                                     onNavigateBack = {
                                         NavController.navigateUp()
+                                    },
+                                    onNavigateToGame = { difficulty, challengeId ->
+                                        // Navigate to game with challenge context for challenger
+                                        NavController.navigate("game/$difficulty?challengeId=$challengeId")
                                     },
                                     modifier = Modifier
                                         .fillMaxSize()

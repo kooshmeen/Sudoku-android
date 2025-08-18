@@ -3,6 +3,7 @@ package com.kooshmeen.sudoku.api
 import com.kooshmeen.sudoku.data.api.ApiResponse
 import com.kooshmeen.sudoku.data.api.ChallengeCompletionRequest
 import com.kooshmeen.sudoku.data.api.ChallengeCompletionResponse
+import com.kooshmeen.sudoku.data.api.ChallengeCreationResponse
 import com.kooshmeen.sudoku.data.api.ChallengesResponse
 import com.kooshmeen.sudoku.data.api.CreateChallengeRequest
 import com.kooshmeen.sudoku.data.api.GameSubmission
@@ -10,6 +11,7 @@ import com.kooshmeen.sudoku.data.api.GroupData
 import com.kooshmeen.sudoku.data.api.GroupMembersResponse
 import com.kooshmeen.sudoku.data.api.GroupsResponse
 import com.kooshmeen.sudoku.data.api.LeaderboardResponse
+import com.kooshmeen.sudoku.data.api.LiveMatch
 import com.kooshmeen.sudoku.data.api.LoginRequest
 import com.kooshmeen.sudoku.data.api.LoginResponse
 import com.kooshmeen.sudoku.data.api.RegisterRequest
@@ -159,13 +161,6 @@ interface SudokuApiService {
     ): Response<ApiResponse>
 
     // Challenge endpoints
-    @POST("groups/{groupId}/challenge")
-    suspend fun createChallenge(
-        @Header("Authorization") token: String,
-        @Path("groupId") groupId: Int,
-        @Body request: CreateChallengeRequest
-    ): Response<ApiResponse>
-
     @GET("challenges/pending")
     suspend fun getPendingChallenges(
         @Header("Authorization") token: String
@@ -183,4 +178,35 @@ interface SudokuApiService {
         @Path("challengeId") challengeId: Int,
         @Body request: ChallengeCompletionRequest
     ): Response<ChallengeCompletionResponse>
+
+    @POST("groups/{groupId}/challenge")
+    suspend fun createChallenge(
+        @Header("Authorization") token: String,
+        @Path("groupId") groupId: Int,
+        @Body request: CreateChallengeRequest
+    ): Response<ChallengeCreationResponse>
+
+    @POST("challenges/{challengeId}/reject")
+    suspend fun rejectChallenge(
+        @Header("Authorization") token: String,
+        @Path("challengeId") challengeId: Int
+    ): Response<ApiResponse>
+
+    @POST("challenges/{challengeId}/complete-challenger")
+    suspend fun completeChallengerGame(
+        @Header("Authorization") token: String,
+        @Path("challengeId") challengeId: Int,
+        @Body request: ChallengeCompletionRequest
+    ): Response<ApiResponse>
+
+    @GET("matches/pending")
+    suspend fun getPendingLiveMatches(
+        @Header("Authorization") token: String
+    ): Response<Map<String, List<LiveMatch>>>
+
+    @POST("matches/{matchId}/accept")
+    suspend fun acceptLiveMatch(
+        @Header("Authorization") token: String,
+        @Path("matchId") matchId: Int
+    ): Response<Map<String, Any>>
 }

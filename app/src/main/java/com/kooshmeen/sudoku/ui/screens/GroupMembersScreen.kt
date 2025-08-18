@@ -41,7 +41,8 @@ import java.util.*
 fun GroupMembersScreen(
     groupId: Int,
     modifier: Modifier = Modifier,
-    onNavigateBack: () -> Unit = {}
+    onNavigateBack: () -> Unit = {},
+    onNavigateToGame: (difficulty: String, challengeId: Int) -> Unit = { _, _ -> }
 ) {
     var groupData by remember { mutableStateOf<GroupData?>(null) }
     var members by remember { mutableStateOf<List<GroupMember>>(emptyList()) }
@@ -296,17 +297,32 @@ fun GroupMembersScreen(
     if (showChallengeDialog && selectedMemberId != null) {
         ChallengeDialog(
             onDismiss = { showChallengeDialog = false },
-            onChallengeCreated = { difficulty ->
+            onChallengeCreated = { difficulty, type ->
+                // Handle challenge creation
                 scope.launch {
-                    val result = repository.createChallenge(groupId, selectedMemberId!!, difficulty)
+                    val result = repository.createChallenge(
+                        challengedId = selectedMemberId!!,
+                        groupId = groupId,
+                        difficulty = difficulty,
+                        challengeType = type
+                    )
                     result.fold(
-                        onSuccess = { message ->
-                            // Show success message
+                        onSuccess = { response ->
                             showChallengeDialog = false
+
+                            // For offline challenges, challenger should start the game immediately
+                            if (type == "offline" && response.requiresChallengerCompletion == true) {
+                                response.challengeId?.let { challengeId ->
+                                    // Navigate to game with challenge context for challenger
+                                    // This will be handled by the parent navigation
+                                    Log.d("GroupMembersScreen", "Starting offline challenge game for challenger with ID: $challengeId")
+                                    onNavigateToGame(type, challengeId)
+                                }
+                            }
                         },
                         onFailure = { exception ->
-                            errorMessage = exception.message
-                            showChallengeDialog = false
+                            Log.e("GroupMembersScreen", "Failed to create challenge: ${exception.message}")
+                            // Optionally show error message
                         }
                     )
                 }
@@ -471,18 +487,46 @@ private fun EmptyMembersMessage(
 @Composable
 private fun ChallengeDialog(
     onDismiss: () -> Unit,
-    onChallengeCreated: (String) -> Unit
+    onChallengeCreated: (String, String) -> Unit // Add challengeType parameter
 ) {
     var selectedDifficulty by remember { mutableStateOf("medium") }
+    var selectedType by remember { mutableStateOf("offline") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Create Challenge") },
         text = {
             Column {
-                Text("Select difficulty for the challenge:")
+                Text("Select challenge type:")
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Challenge type selection
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf("offline", "online").forEach { type ->
+                        FilterChip(
+                            onClick = { selectedType = type },
+                            label = {
+                                Text(
+                                    when(type) {
+                                        "offline" -> "Offline"
+                                        "online" -> "Live"
+                                        else -> type
+                                    }
+                                )
+                            },
+                            selected = selectedType == type
+                        )
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
 
+                Text("Select difficulty:")
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Difficulty selection
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -494,11 +538,24 @@ private fun ChallengeDialog(
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Explanation text
+                Text(
+                    text = when(selectedType) {
+                        "offline" -> "Offline: You play first, then your opponent gets the same puzzle with your time to beat."
+                        "online" -> "Live: Both players start the same puzzle simultaneously when accepted."
+                        else -> ""
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         },
         confirmButton = {
             Button(
-                onClick = { onChallengeCreated(selectedDifficulty) }
+                onClick = { onChallengeCreated(selectedDifficulty, selectedType) }
             ) {
                 Text("Create Challenge")
             }
