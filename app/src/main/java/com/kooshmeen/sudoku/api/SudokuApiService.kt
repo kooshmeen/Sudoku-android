@@ -217,4 +217,10 @@ interface SudokuApiService {
         @Path("challengeId") challengeId: Int,
         @Body request: ChallengerCompletionRequest
     ): Response<ApiResponse>
+
+    @GET("challenges/{challengeId}/data")
+    suspend fun getChallengeData(
+        @Header("Authorization") token: String,
+        @Path("challengeId") challengeId: Int
+    ): Response<Map<String, Any>>
 }

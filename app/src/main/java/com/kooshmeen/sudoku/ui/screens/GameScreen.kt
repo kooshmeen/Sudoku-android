@@ -54,6 +54,8 @@ import com.kooshmeen.sudoku.ui.theme.SudokuTheme
 import com.kooshmeen.sudoku.utils.BestTimeManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.collections.flatten
+import kotlin.collections.toList
 
 @Composable
 fun GameScreen(
@@ -331,11 +333,12 @@ fun GameScreen(
                         challengeId = challengeId,
                         timeSeconds = gameState.elapsedTimeSeconds,
                         numberOfMistakes = gameState.mistakesCount,
-                        puzzleData = mapOf(
-                            "puzzle" to gameState.grid.map { row ->
+                        puzzleData = mapOf<String, Any>(
+                            "puzzle" to gameState.grid.flatMap { row ->
                                 row.map { cell -> if (cell.isOriginal) cell.value else 0 }
                             },
-                            "solution" to gameState.solutionGrid.map { it.toList() }
+                            "solution" to gameState.solutionGrid.flatMap { it.toList() },
+                            "difficulty" to gameState.difficulty
                         )
                     )
                     challengeResult.fold(

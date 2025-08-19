@@ -428,45 +428,66 @@ class GameState {
         this.errorCells = emptySet()
         this.mistakesCount = 0
 
-        // Load the specific puzzle data from the challenge
         try {
-            val puzzleGrid = puzzleData["puzzle"] as? List<*>
-            val solutionGrid = puzzleData["solution"] as? List<*>
+            val puzzleList = puzzleData["puzzle"] as? List<*>
+            val solutionList = puzzleData["solution"] as? List<*>
 
-            if (puzzleGrid != null && solutionGrid != null) {
-                // Load the solution grid
-                this.solutionGrid = Array(9) { row ->
-                    IntArray(9) { col ->
-                        val rowData = solutionGrid[row] as? List<*>
-                        (rowData?.get(col) as? Number)?.toInt() ?: 0
+            if (puzzleList != null && solutionList != null) {
+                // Handle flat array format (81 elements)
+                if (puzzleList.size == 81 && solutionList.size == 81) {
+                    // Convert flat arrays to 2D
+                    this.solutionGrid = Array(9) { row ->
+                        IntArray(9) { col ->
+                            val index = row * 9 + col
+                            (solutionList[index] as? Number)?.toInt() ?: 0
+                        }
                     }
-                }
 
-                // Load the puzzle grid
-                this.grid = Array(9) { row ->
-                    Array(9) { col ->
-                        val rowData = puzzleGrid[row] as? List<*>
-                        val cellValue = (rowData?.get(col) as? Number)?.toInt() ?: 0
-                        SudokuCell(
-                            value = cellValue,
-                            isOriginal = cellValue != 0
-                        )
+                    this.grid = Array(9) { row ->
+                        Array(9) { col ->
+                            val index = row * 9 + col
+                            val cellValue = (puzzleList[index] as? Number)?.toInt() ?: 0
+                            SudokuCell(
+                                value = cellValue,
+                                isOriginal = cellValue != 0
+                            )
+                        }
+                    }
+                } else {
+                    // Handle 2D array format (9x9)
+                    this.solutionGrid = Array(9) { row ->
+                        IntArray(9) { col ->
+                            val rowData = solutionList[row] as? List<*>
+                            (rowData?.get(col) as? Number)?.toInt() ?: 0
+                        }
+                    }
+
+                    this.grid = Array(9) { row ->
+                        Array(9) { col ->
+                            val rowData = puzzleList[row] as? List<*>
+                            val cellValue = (rowData?.get(col) as? Number)?.toInt() ?: 0
+                            SudokuCell(
+                                value = cellValue,
+                                isOriginal = cellValue != 0
+                            )
+                        }
                     }
                 }
             } else {
-                // Fallback: generate a new puzzle if data is invalid
-                val generator = SudokuGenerator()
-                val completeGrid = generator.generateCompleteGrid()
-                this.solutionGrid = completeGrid.map { it.clone() }.toTypedArray()
-                this.grid = generator.createPuzzleWithUniquenessCheck(completeGrid, difficulty)
+                // Fallback to new puzzle generation
+                generateNewPuzzle(difficulty)
             }
         } catch (e: Exception) {
-            // Fallback: generate a new puzzle if there's an error parsing the data
-            val generator = SudokuGenerator()
-            val completeGrid = generator.generateCompleteGrid()
-            this.solutionGrid = completeGrid.map { it.clone() }.toTypedArray()
-            this.grid = generator.createPuzzleWithUniquenessCheck(completeGrid, difficulty)
+            // Fallback to new puzzle generation
+            generateNewPuzzle(difficulty)
         }
+    }
+
+    private fun generateNewPuzzle(difficulty: String) {
+        val generator = SudokuGenerator()
+        val completeGrid = generator.generateCompleteGrid()
+        this.solutionGrid = completeGrid.map { it.clone() }.toTypedArray()
+        this.grid = generator.createPuzzleWithUniquenessCheck(completeGrid, difficulty)
     }
 
     /**

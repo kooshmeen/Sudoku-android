@@ -489,7 +489,7 @@ class SudokuRepository(private val context: Context) {
     suspend fun getChallengeData(challengeId: Int): Result<Map<String, Any>> {
         return try {
             val token = authToken ?: return Result.failure(Exception("Not authenticated"))
-            val response = apiService.acceptChallenge("Bearer $token", challengeId)
+            val response = apiService.getChallengeData("Bearer $token", challengeId)
 
             if (response.isSuccessful) {
                 Result.success(response.body() ?: emptyMap())
