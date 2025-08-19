@@ -162,3 +162,12 @@ data class LiveMatch(
     val status: String,
     val created_at: String
 )
+
+/**
+ * Data class for challenger game completion request
+ */
+data class ChallengerCompletionRequest(
+    val timeSeconds: Int,
+    val numberOfMistakes: Int,
+    val puzzleData: Map<String, Any>
+)

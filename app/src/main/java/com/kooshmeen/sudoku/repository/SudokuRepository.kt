@@ -401,21 +401,17 @@ class SudokuRepository(private val context: Context) {
         challengeId: Int,
         timeSeconds: Int,
         numberOfMistakes: Int,
-        puzzleData: Map<String, Any>? = null
+        puzzleData: Map<String, Any>
     ): Result<String> {
         return try {
             val token = authToken ?: return Result.failure(Exception("Not authenticated"))
-            val requestBody = mutableMapOf<String, Any>(
-                "timeSeconds" to timeSeconds,
-                "numberOfMistakes" to numberOfMistakes
+            val request = ChallengerCompletionRequest(
+                timeSeconds = timeSeconds,
+                numberOfMistakes = numberOfMistakes,
+                puzzleData = puzzleData
             )
 
-            // Add puzzle data if provided (for offline challenges)
-            puzzleData?.let { data ->
-                requestBody["puzzleData"] = data
-            }
-
-            val response = apiService.completeChallengerGame("Bearer $token", challengeId, requestBody)
+            val response = apiService.completeChallengerGame("Bearer $token", challengeId, request)
 
             if (response.isSuccessful) {
                 Result.success(response.body()?.message ?: "Game completed")

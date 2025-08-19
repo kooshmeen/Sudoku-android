@@ -4,6 +4,7 @@ import com.kooshmeen.sudoku.data.api.ApiResponse
 import com.kooshmeen.sudoku.data.api.ChallengeCompletionRequest
 import com.kooshmeen.sudoku.data.api.ChallengeCompletionResponse
 import com.kooshmeen.sudoku.data.api.ChallengeCreationResponse
+import com.kooshmeen.sudoku.data.api.ChallengerCompletionRequest
 import com.kooshmeen.sudoku.data.api.ChallengesResponse
 import com.kooshmeen.sudoku.data.api.CreateChallengeRequest
 import com.kooshmeen.sudoku.data.api.GameSubmission
@@ -209,4 +210,11 @@ interface SudokuApiService {
         @Header("Authorization") token: String,
         @Path("matchId") matchId: Int
     ): Response<Map<String, Any>>
+
+    @POST("challenges/{challengeId}/complete-challenger")
+    suspend fun completeChallengerGame(
+        @Header("Authorization") token: String,
+        @Path("challengeId") challengeId: Int,
+        @Body request: ChallengerCompletionRequest
+    ): Response<ApiResponse>
 }
