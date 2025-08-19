@@ -413,6 +413,63 @@ class GameState {
     }
 
     /**
+     * Load a challenge game with specific puzzle data
+     */
+    fun loadChallengeGame(puzzleData: Map<*, *>, difficulty: String) {
+        this.difficulty = difficulty
+        this.elapsedTimeSeconds = 0
+        this.isPaused = false
+        this.selectedCell = null
+        this.selectedNumber = null
+        this.gameMode = GameMode.NORMAL
+        this.actionHistory.clear()
+        this.isGameActive = true
+        this.isGameCompleted = false
+        this.errorCells = emptySet()
+        this.mistakesCount = 0
+
+        // Load the specific puzzle data from the challenge
+        try {
+            val puzzleGrid = puzzleData["puzzle"] as? List<*>
+            val solutionGrid = puzzleData["solution"] as? List<*>
+
+            if (puzzleGrid != null && solutionGrid != null) {
+                // Load the solution grid
+                this.solutionGrid = Array(9) { row ->
+                    IntArray(9) { col ->
+                        val rowData = solutionGrid[row] as? List<*>
+                        (rowData?.get(col) as? Number)?.toInt() ?: 0
+                    }
+                }
+
+                // Load the puzzle grid
+                this.grid = Array(9) { row ->
+                    Array(9) { col ->
+                        val rowData = puzzleGrid[row] as? List<*>
+                        val cellValue = (rowData?.get(col) as? Number)?.toInt() ?: 0
+                        SudokuCell(
+                            value = cellValue,
+                            isOriginal = cellValue != 0
+                        )
+                    }
+                }
+            } else {
+                // Fallback: generate a new puzzle if data is invalid
+                val generator = SudokuGenerator()
+                val completeGrid = generator.generateCompleteGrid()
+                this.solutionGrid = completeGrid.map { it.clone() }.toTypedArray()
+                this.grid = generator.createPuzzleWithUniquenessCheck(completeGrid, difficulty)
+            }
+        } catch (e: Exception) {
+            // Fallback: generate a new puzzle if there's an error parsing the data
+            val generator = SudokuGenerator()
+            val completeGrid = generator.generateCompleteGrid()
+            this.solutionGrid = completeGrid.map { it.clone() }.toTypedArray()
+            this.grid = generator.createPuzzleWithUniquenessCheck(completeGrid, difficulty)
+        }
+    }
+
+    /**
      * Continue an existing game
      */
     fun continueGame() {

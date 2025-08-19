@@ -400,12 +400,22 @@ class SudokuRepository(private val context: Context) {
     suspend fun completeChallengerGame(
         challengeId: Int,
         timeSeconds: Int,
-        numberOfMistakes: Int
+        numberOfMistakes: Int,
+        puzzleData: Map<String, Any>? = null
     ): Result<String> {
         return try {
             val token = authToken ?: return Result.failure(Exception("Not authenticated"))
-            val request = ChallengeCompletionRequest(timeSeconds, numberOfMistakes)
-            val response = apiService.completeChallengerGame("Bearer $token", challengeId, request)
+            val requestBody = mutableMapOf<String, Any>(
+                "timeSeconds" to timeSeconds,
+                "numberOfMistakes" to numberOfMistakes
+            )
+
+            // Add puzzle data if provided (for offline challenges)
+            puzzleData?.let { data ->
+                requestBody["puzzleData"] = data
+            }
+
+            val response = apiService.completeChallengerGame("Bearer $token", challengeId, requestBody)
 
             if (response.isSuccessful) {
                 Result.success(response.body()?.message ?: "Game completed")
@@ -471,6 +481,24 @@ class SudokuRepository(private val context: Context) {
                 Result.success(response.body()!!)
             } else {
                 Result.failure(Exception("Failed to complete challenge: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Get challenge data including puzzle information
+     */
+    suspend fun getChallengeData(challengeId: Int): Result<Map<String, Any>> {
+        return try {
+            val token = authToken ?: return Result.failure(Exception("Not authenticated"))
+            val response = apiService.acceptChallenge("Bearer $token", challengeId)
+
+            if (response.isSuccessful) {
+                Result.success(response.body() ?: emptyMap())
+            } else {
+                Result.failure(Exception("Failed to get challenge data: ${response.code()}"))
             }
         } catch (e: Exception) {
             Result.failure(e)

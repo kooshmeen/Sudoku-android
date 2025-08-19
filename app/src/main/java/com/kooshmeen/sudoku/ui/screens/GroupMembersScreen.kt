@@ -316,7 +316,7 @@ fun GroupMembersScreen(
                                     // Navigate to game with challenge context for challenger
                                     // This will be handled by the parent navigation
                                     Log.d("GroupMembersScreen", "Starting offline challenge game for challenger with ID: $challengeId")
-                                    onNavigateToGame(type, challengeId)
+                                    onNavigateToGame(difficulty, challengeId)
                                 }
                             }
                         },

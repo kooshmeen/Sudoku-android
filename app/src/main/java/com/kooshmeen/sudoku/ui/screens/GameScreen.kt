@@ -79,11 +79,35 @@ fun GameScreen(
     LaunchedEffect(challengeId, difficulty) {
         challengeId?.let { id ->
             isChallenge = true
-            // For offline challenges, the challenger starts immediately with a new puzzle
-            // No need to "accept" the challenge as they created it
-            difficulty?.let { diff ->
-                // Start a new game with the specified difficulty for the challenge
-                GameStateManager.startNewGame(diff, context)
+
+            // Check if this is accepting an existing challenge (challenged player)
+            // or creating a new puzzle for offline challenge (challenger)
+            scope.launch {
+                val result = repository.getChallengeData(id)
+                result.fold(
+                    onSuccess = { data ->
+                        challengeData = data
+                        opponentTime = (data["challengerTime"] as? Number)?.toInt()
+
+                        // If puzzle data exists, load that specific puzzle
+                        val puzzleData = data["puzzleData"] as? Map<*, *>
+                        if (puzzleData != null) {
+                            // Load the exact same puzzle the challenger played
+                            GameStateManager.loadChallengeGame(puzzleData, difficulty ?: "medium", context)
+                        } else {
+                            // This is the challenger creating a new puzzle
+                            difficulty?.let { diff ->
+                                GameStateManager.startNewGame(diff, context)
+                            }
+                        }
+                    },
+                    onFailure = { exception ->
+                        // If no challenge data exists, this is a new challenge being created
+                        difficulty?.let { diff ->
+                            GameStateManager.startNewGame(diff, context)
+                        }
+                    }
+                )
             }
         }
     }
@@ -302,16 +326,22 @@ fun GameScreen(
 
                 // challenge - handle offline challenges differently
                 if (isChallenge && challengeId != null) {
-                    // For offline challenges, the challenger uses a different endpoint
+                    // For offline challenges, the challenger needs to send puzzle data along with completion
                     val challengeResult = repository.completeChallengerGame(
                         challengeId = challengeId,
                         timeSeconds = gameState.elapsedTimeSeconds,
-                        numberOfMistakes = gameState.mistakesCount
+                        numberOfMistakes = gameState.mistakesCount,
+                        puzzleData = mapOf(
+                            "puzzle" to gameState.grid.map { row ->
+                                row.map { cell -> if (cell.isOriginal) cell.value else 0 }
+                            },
+                            "solution" to gameState.solutionGrid.map { it.toList() }
+                        )
                     )
                     challengeResult.fold(
                         onSuccess = {
                             // Successfully submitted challenger's game completion
-                            println("Challenger game completed successfully.")
+                            println("Challenger game completed successfully. Invitation sent to challenged player.")
                         },
                         onFailure = { exception ->
                             // Handle error submitting challenger's game

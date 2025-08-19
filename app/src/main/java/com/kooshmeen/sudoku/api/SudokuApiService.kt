@@ -196,7 +196,7 @@ interface SudokuApiService {
     suspend fun completeChallengerGame(
         @Header("Authorization") token: String,
         @Path("challengeId") challengeId: Int,
-        @Body request: ChallengeCompletionRequest
+        @Body request: Map<String, Any>
     ): Response<ApiResponse>
 
     @GET("matches/pending")

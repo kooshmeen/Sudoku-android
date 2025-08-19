@@ -52,6 +52,14 @@ object GameStateManager {
     }
 
     /**
+     * Load a challenge game with specific puzzle data
+     */
+    fun loadChallengeGame(puzzleData: Map<*, *>, difficulty: String, context: Context? = null) {
+        context?.let { GameStatePersistence.clearSavedGame(it) }
+        _gameState.loadChallengeGame(puzzleData, difficulty)
+    }
+
+    /**
      * Continue the current active game
      */
     fun continueGame() {
