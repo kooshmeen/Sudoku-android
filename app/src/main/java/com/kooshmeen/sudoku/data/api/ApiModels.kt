@@ -109,18 +109,6 @@ data class ChallengeCompletionRequest(
 )
 
 /**
- * Data class for challenge completion response
- */
-data class ChallengeCompletionResponse(
-    val message: String,
-    val winner: String?,
-    val challengerScore: Int?,
-    val challengedScore: Int?,
-    val challengerTime: Int?,
-    val challengedTime: Int?
-)
-
-/**
  * Response wrapper for challenges list
  */
 data class ChallengesResponse(
@@ -170,4 +158,17 @@ data class ChallengerCompletionRequest(
     val timeSeconds: Int,
     val numberOfMistakes: Int,
     val puzzleData: Map<String, Any>
+)
+
+// In ApiModels.kt
+data class ChallengeCompletionResponse(
+    val message: String,
+    val winner: String?,
+    val challengerScore: Int?,
+    val challengedScore: Int?,
+    val challengerTime: Int?,
+    val challengedTime: Int?,
+    val challengerMistakes: Int?,
+    val challengedMistakes: Int?,
+    val status: String?
 )
