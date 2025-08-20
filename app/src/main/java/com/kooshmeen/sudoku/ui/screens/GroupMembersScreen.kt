@@ -234,25 +234,15 @@ fun GroupMembersScreen(
                             items(members) { member ->
                                 MemberCard(
                                     member = member,
-                                    isCurrentUser = repository.fetchCurrentUser()?.id == member.id
-                                )
-                                // Dont show challenge button for self
-                                if (member.player_id != repository.fetchCurrentUser()?.id) {
-                                    IconButton(
-                                        onClick = {
-                                            // Show challenge dialog
+                                    isCurrentUser = repository.fetchCurrentUser()?.id == member.id,
+                                    onChallengeClick = if (member.player_id != repository.fetchCurrentUser()?.id) {
+                                        {
                                             showChallengeDialog = true
                                             selectedMemberId = member.player_id
                                             Log.d("GroupMembersScreen", "Selected member for challenge: ${member.username} with ID ${member.player_id}")
                                         }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.SportsEsports,
-                                            contentDescription = "Challenge Player",
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-                                }
+                                    } else null
+                                )
                             }
                         }
                     }
@@ -334,7 +324,8 @@ fun GroupMembersScreen(
 @Composable
 private fun MemberCard(
     member: GroupMember,
-    isCurrentUser: Boolean
+    isCurrentUser: Boolean,
+    onChallengeClick: (() -> Unit)? = null // Add challenge click listener
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -448,8 +439,111 @@ private fun MemberCard(
                         )
                     }
                 }
+
+                // W/D/L Statistics
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Wins
+                    StatsBadge(
+                        label = "W",
+                        value = member.wins ?: 0,
+                        backgroundColor = Color(0xFF4CAF50), // Green
+                        textColor = Color.White
+                    )
+
+                    // Draws
+                    StatsBadge(
+                        label = "D",
+                        value = member.draws ?: 0,
+                        backgroundColor = Color(0xFFFFC107), // Yellow
+                        textColor = Color.Black
+                    )
+
+                    // Losses
+                    StatsBadge(
+                        label = "L",
+                        value = member.losses ?: 0,
+                        backgroundColor = Color(0xFFF44336), // Red
+                        textColor = Color.White
+                    )
+                }
+            }
+
+            // Challenge button (only show if not current user)
+            onChallengeClick?.let { challengeClick ->
+                Spacer(modifier = Modifier.width(12.dp))
+                IconButton(
+                    onClick = challengeClick,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.SportsEsports,
+                        contentDescription = "Challenge Player",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun StatsBadge(
+    label: String,
+    value: Int,
+    backgroundColor: Color,
+    textColor: Color
+) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(backgroundColor)
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = textColor,
+                fontWeight = FontWeight.Bold,
+                fontSize = 10.sp
+            )
+            Text(
+                text = value.toString(),
+                style = MaterialTheme.typography.labelSmall,
+                color = textColor,
+                fontWeight = FontWeight.Medium,
+                fontSize = 10.sp
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+fun MemberCardPreview() {
+    SudokuTheme {
+        MemberCard(
+            member = GroupMember(
+                id = 1,
+                group_id = 1,
+                player_id = 1,
+                username = "JohnDoe",
+                role = "leader",
+                joined_at = "2023-10-01T12:00:00.000Z"
+            ),
+            isCurrentUser = true
+        )
     }
 }
 
