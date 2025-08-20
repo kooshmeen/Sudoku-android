@@ -108,10 +108,15 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 composable(
-                    "game/{difficulty}?challengeId={challengeId}",
+                    "game/{difficulty}?challengeId={challengeId}&challengeRole={challengeRole}",
                     arguments = listOf(
                         navArgument("difficulty") { type = NavType.StringType },
                         navArgument("challengeId") {
+                            type = NavType.StringType
+                            nullable = true
+                            defaultValue = null
+                        },
+                        navArgument("challengeRole") {
                             type = NavType.StringType
                             nullable = true
                             defaultValue = null
@@ -122,6 +127,7 @@ class MainActivity : ComponentActivity() {
                         val difficulty = backStackEntry.arguments?.getString("difficulty") ?: "medium"
                         val challengeIdString = backStackEntry.arguments?.getString("challengeId")
                         val challengeId = challengeIdString?.takeIf { it != "null" }?.toIntOrNull()
+                        val challengeRole = backStackEntry.arguments?.getString("challengeRole")?.takeIf { it != "null" }
 
                         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                             GameScreen(
@@ -133,8 +139,12 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToMenu = {
                                     NavController.navigateUp()
                                 },
+                                onNavigateToChallengeResult = { challengeId, timeSeconds, mistakes ->
+                                    NavController.navigate("challenge_result/$challengeId/$timeSeconds/$mistakes")
+                                },
                                 challengeId = challengeId,
-                                difficulty = difficulty
+                                difficulty = difficulty,
+                                challengeRole = challengeRole
                             )
                         }
                     }
@@ -220,7 +230,7 @@ class MainActivity : ComponentActivity() {
                                     },
                                     onNavigateToGame = { difficulty, challengeId ->
                                         // Navigate to game with challenge context for challenger
-                                        NavController.navigate("game/$difficulty?challengeId=$challengeId")
+                                        NavController.navigate("game/$difficulty?challengeId=$challengeId&challengeRole=challenger")
                                     },
                                     modifier = Modifier
                                         .fillMaxSize()
@@ -238,8 +248,8 @@ class MainActivity : ComponentActivity() {
                                     NavController.navigateUp()
                                 },
                                 onNavigateToGame = { difficulty, challengeId ->
-                                    // Navigate to game with challenge context
-                                    NavController.navigate("game/$difficulty?challengeId=$challengeId")
+                                    // Navigate to game with challenge context for challenged player
+                                    NavController.navigate("game/$difficulty?challengeId=$challengeId&challengeRole=challenged")
                                 },
                                 modifier = Modifier
                                     .fillMaxSize()

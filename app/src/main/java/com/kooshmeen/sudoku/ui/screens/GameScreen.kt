@@ -63,8 +63,10 @@ fun GameScreen(
     onThemeToggle: (Boolean) -> Unit = { /* Default no-op */ },
     isDarkTheme: Boolean = true, // Default value for dark theme
     onNavigateToMenu: () -> Unit = { /* Default no-op */ },
+    onNavigateToChallengeResult: (Int, Int, Int) -> Unit = { _, _, _ -> }, // challengeId, timeSeconds, mistakes
     challengeId: Int? = null, // Optional challenge ID for challenges mode
-    difficulty: String? = null // Optional difficulty override for challenges
+    difficulty: String? = null, // Optional difficulty override for challenges
+    challengeRole: String? = null // "challenger" or "challenged" to distinguish roles
 ) {
     val gameState = GameStateManager.gameState
     var showCompletionDialog by remember { mutableStateOf(false) }
@@ -326,31 +328,39 @@ fun GameScreen(
                     println("Score submission failed. Please try again later.")
                 }
 
-                // challenge - handle offline challenges differently
+                // challenge - handle offline challenges differently based on role
                 if (isChallenge && challengeId != null) {
-                    // For offline challenges, the challenger needs to send puzzle data along with completion
-                    val challengeResult = repository.completeChallengerGame(
-                        challengeId = challengeId,
-                        timeSeconds = gameState.elapsedTimeSeconds,
-                        numberOfMistakes = gameState.mistakesCount,
-                        puzzleData = mapOf<String, Any>(
-                            "puzzle" to gameState.grid.flatMap { row ->
-                                row.map { cell -> if (cell.isOriginal) cell.value else 0 }
-                            },
-                            "solution" to gameState.solutionGrid.flatMap { it.toList() },
-                            "difficulty" to gameState.difficulty
+                    if (challengeRole == "challenger") {
+                        // For offline challenges, the challenger needs to send puzzle data along with completion
+                        val challengeResult = repository.completeChallengerGame(
+                            challengeId = challengeId,
+                            timeSeconds = gameState.elapsedTimeSeconds,
+                            numberOfMistakes = gameState.mistakesCount,
+                            puzzleData = mapOf<String, Any>(
+                                "puzzle" to gameState.grid.flatMap { row ->
+                                    row.map { cell -> if (cell.isOriginal) cell.value else 0 }
+                                },
+                                "solution" to gameState.solutionGrid.flatMap { it.toList() },
+                                "difficulty" to gameState.difficulty
+                            )
                         )
-                    )
-                    challengeResult.fold(
-                        onSuccess = {
-                            // Successfully submitted challenger's game completion
-                            println("Challenger game completed successfully. Invitation sent to challenged player.")
-                        },
-                        onFailure = { exception ->
-                            // Handle error submitting challenger's game
-                            println("Error submitting challenger game: ${exception.message}")
-                        }
-                    )
+                        challengeResult.fold(
+                            onSuccess = {
+                                // Successfully submitted challenger's game completion
+                                println("Challenger game completed successfully. Invitation sent to challenged player.")
+                            },
+                            onFailure = { exception ->
+                                // Handle error submitting challenger's game
+                                println("Error submitting challenger game: ${exception.message}")
+                            }
+                        )
+                    } else if (challengeRole == "challenged") {
+                        // For challenged player, complete the challenge and navigate to results
+                        showCompletionDialog = false
+                        GameStateManager.endGame()
+                        onNavigateToChallengeResult(challengeId, gameState.elapsedTimeSeconds, gameState.mistakesCount)
+                        return@LaunchedEffect
+                    }
                 }
             }
 

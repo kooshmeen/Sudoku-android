@@ -500,4 +500,35 @@ class SudokuRepository(private val context: Context) {
             Result.failure(e)
         }
     }
+
+    /**
+     * Update group member statistics (wins/losses/draws)
+     */
+    suspend fun updateMemberStats(
+        groupId: Int,
+        memberId: Int,
+        wins: Int? = null,
+        losses: Int? = null,
+        draws: Int? = null
+    ): Result<ApiResponse> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val token = authToken ?: return@withContext Result.failure(Exception("Not logged in"))
+                val statsUpdate = mutableMapOf<String, Any>()
+                wins?.let { statsUpdate["wins"] = it }
+                losses?.let { statsUpdate["losses"] = it }
+                draws?.let { statsUpdate["draws"] = it }
+
+                val response = apiService.updateMemberStats("Bearer $token", groupId, memberId, statsUpdate)
+                if (response.isSuccessful) {
+                    response.body()?.let { Result.success(it) }
+                        ?: Result.failure(Exception("Empty response"))
+                } else {
+                    Result.failure(Exception("Failed to update member stats: ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
 }

@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kooshmeen.sudoku.data.api.ChallengeCompletionResponse
@@ -47,6 +48,10 @@ fun ChallengeResultScreen(
                 onSuccess = { response ->
                     challengeResult = response
                     isLoading = false
+
+                    // The backend should handle updating win/loss stats automatically
+                    // when the challenge is completed, but we could add additional
+                    // client-side handling here if needed
                 },
                 onFailure = { exception ->
                     errorMessage = exception.message ?: "Failed to load challenge result"
@@ -278,4 +283,16 @@ private fun formatTime(seconds: Int): String {
     val minutes = seconds / 60
     val remainingSeconds = seconds % 60
     return String.format("%02d:%02d", minutes, remainingSeconds)
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewChallengeResultScreen() {
+    ChallengeResultScreen(
+        challengeId = 1,
+        timeSeconds = 123,
+        mistakes = 2,
+        onNavigateBack = {},
+        modifier = Modifier
+    )
 }

@@ -223,4 +223,13 @@ interface SudokuApiService {
         @Header("Authorization") token: String,
         @Path("challengeId") challengeId: Int
     ): Response<Map<String, Any>>
+
+    // Group member statistics update
+    @PUT("groups/{groupId}/members/{memberId}/stats")
+    suspend fun updateMemberStats(
+        @Header("Authorization") token: String,
+        @Path("groupId") groupId: Int,
+        @Path("memberId") memberId: Int,
+        @Body statsUpdate: Map<String, Any>
+    ): Response<ApiResponse>
 }
