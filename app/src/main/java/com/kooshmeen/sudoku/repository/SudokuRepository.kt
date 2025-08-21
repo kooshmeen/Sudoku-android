@@ -300,12 +300,14 @@ class SudokuRepository(private val context: Context) {
         }
     }
 
-    suspend fun getGroupDetails(groupId: Int): Result<GroupData> {
+    suspend fun getGroupDetails(groupId: Int): Result<GroupDetailsResponse> {
         return withContext(Dispatchers.IO) {
             try {
                 val token = authToken ?: return@withContext Result.failure(Exception("Not logged in"))
                 val response = apiService.getGroupDetails("Bearer $token", groupId)
+                Log.d("SudokuRepository", "response body: ${response.body()}")
                 if (response.isSuccessful) {
+                    Log.d("SudokuRepository", "Group details response: ${response.body()}")
                     response.body()?.let { Result.success(it) }
                         ?: Result.failure(Exception("Empty response"))
                 } else {

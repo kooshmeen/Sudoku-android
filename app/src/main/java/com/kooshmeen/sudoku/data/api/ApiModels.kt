@@ -57,6 +57,25 @@ data class GroupData(
     val user_role: String? = null // 'owner', 'member', etc.
 )
 
+data class GroupDetailsResponse(
+    val group: GroupData,
+    val members: List<GroupMember>,
+    val stats: GroupStats
+)
+
+data class GroupStats(
+    val active_members: Int,
+    val total_play_days: Int,
+    val total_games_completed: Int,
+    val total_easy_completed: Int,
+    val total_medium_completed: Int,
+    val total_hard_completed: Int,
+    val total_no_mistake_games: Int,
+    val total_group_score: Int,
+    val best_overall_time: Int? = null,
+    val avg_best_time: Float? = null,
+)
+
 data class ApiResponse(
     val message: String
 )

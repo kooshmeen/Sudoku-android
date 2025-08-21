@@ -66,7 +66,7 @@ fun GroupMembersScreen(
             val groupResult = repository.getGroupDetails(groupId)
             groupResult.fold(
                 onSuccess = { group ->
-                    groupData = group
+                    groupData = group.group
                     // Then get group members
                     val membersResult = repository.getGroupMembers(groupId)
                     membersResult.fold(
@@ -106,7 +106,7 @@ fun GroupMembersScreen(
                 title = {
                     Column {
                         Text(
-                            text = group.group_name ?: "Unknown Group", // Add null safety
+                            text = group.group_name ?: "Unkown Group Name", // Add null safety
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,

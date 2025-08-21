@@ -9,6 +9,7 @@ import com.kooshmeen.sudoku.data.api.ChallengesResponse
 import com.kooshmeen.sudoku.data.api.CreateChallengeRequest
 import com.kooshmeen.sudoku.data.api.GameSubmission
 import com.kooshmeen.sudoku.data.api.GroupData
+import com.kooshmeen.sudoku.data.api.GroupDetailsResponse
 import com.kooshmeen.sudoku.data.api.GroupMembersResponse
 import com.kooshmeen.sudoku.data.api.GroupsResponse
 import com.kooshmeen.sudoku.data.api.LeaderboardResponse
@@ -103,7 +104,7 @@ interface SudokuApiService {
     suspend fun getGroupDetails(
         @Header("Authorization") token: String,
         @Path("groupId") groupId: Int
-    ): Response<GroupData>
+    ): Response<GroupDetailsResponse>
 
     @POST("groups/{groupId}/join")
     suspend fun joinGroup(

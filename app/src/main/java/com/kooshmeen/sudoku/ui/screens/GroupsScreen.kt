@@ -44,7 +44,7 @@ fun GroupsScreen(
     onNavigateToGroupLeaderboard: (Int) -> Unit = {},
     onNavigateToGroupMembers: (GroupData) -> Unit = {}
 ) {
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
+    var selectedTabIndex by remember { mutableIntStateOf(1) }
     var allGroups by remember { mutableStateOf<List<GroupData>>(emptyList()) }
     var myGroups by remember { mutableStateOf<List<GroupData>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
@@ -337,7 +337,7 @@ fun GroupsScreen(
                             GroupCard(
                                 group = group,
                                 isLoggedIn = isLoggedIn,
-                                isMyGroup = selectedTabIndex == 1,
+                                isMyGroup = selectedTabIndex == 1 || myGroups.any { it.id == group.id },
                                 onJoinClick = {
                                     selectedGroup = group
                                     showJoinGroupDialog = true
@@ -593,6 +593,7 @@ private fun GroupCard(
                     } else {
                         // Actions for groups the user can join
                         if (isLoggedIn) {
+                            // Check if user is already in the group.
                             Button(
                                 onClick = onJoinClick,
                                 modifier = Modifier.size(width = 80.dp, height = 36.dp)
