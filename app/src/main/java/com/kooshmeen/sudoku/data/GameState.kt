@@ -647,4 +647,15 @@ class GameState {
 
         return true
     }
+
+    /**
+     * Selects the next available number
+     */
+    fun selectNextAvailableNumber() {
+        if (selectedNumber != null && selectedNumber == 9) {
+            selectedNumber = 1 // Wrap around to 1
+        } else {
+            selectedNumber = (selectedNumber ?: 0) + 1
+        }
+    }
 }

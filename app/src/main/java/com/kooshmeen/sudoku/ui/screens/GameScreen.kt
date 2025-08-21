@@ -270,7 +270,13 @@ fun GameScreen(
                 }
             }
         }
-        val disabledNumbers = numberCounts.mapIndexed { idx, count -> if (count >= 9) idx + 1 else null }.filterNotNull()
+        val disabledNumbers = numberCounts.mapIndexed { idx, count -> if (count >= 9) { idx + 1 }
+        else null }.filterNotNull()
+
+        // If selected number is disabled, select the next available number
+        if (gameState.selectedNumber != null && disabledNumbers.contains(gameState.selectedNumber)) {
+            gameState.selectNextAvailableNumber()
+        }
 
         // Input numbers row
         InputRow(
