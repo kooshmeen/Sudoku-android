@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import com.kooshmeen.sudoku.data.api.GroupData
 import com.kooshmeen.sudoku.data.api.GroupMember
 import com.kooshmeen.sudoku.repository.SudokuRepository
+import com.kooshmeen.sudoku.ui.components.PendingChallengeCard
 import com.kooshmeen.sudoku.ui.theme.SudokuTheme
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -51,6 +52,9 @@ fun GroupMembersScreen(
 
     var showChallengeDialog by remember { mutableStateOf(false) }
     var selectedMemberId by remember { mutableStateOf<Int?>(null) }
+    var showPendingChallengeCard by remember { mutableStateOf(false) }
+    var pendingMatchId by remember { mutableStateOf<Int?>(null) }
+    var challengedPlayerName by remember { mutableStateOf<String?>(null) }
 
     val context = LocalContext.current
     val repository = remember { SudokuRepository(context) }
@@ -286,37 +290,76 @@ fun GroupMembersScreen(
     }
     if (showChallengeDialog && selectedMemberId != null) {
         ChallengeDialog(
-            onDismiss = { showChallengeDialog = false },
+            onDismiss = {
+                showChallengeDialog = false
+                selectedMemberId = null
+                challengedPlayerName = null
+            },
             onChallengeCreated = { difficulty, type ->
-                // Handle challenge creation
-                scope.launch {
-                    val result = repository.createChallenge(
-                        challengedId = selectedMemberId!!,
-                        groupId = groupId,
-                        difficulty = difficulty,
-                        challengeType = type
-                    )
-                    result.fold(
-                        onSuccess = { response ->
-                            showChallengeDialog = false
+                // Handle offline challenge creation only (live challenges are handled internally)
+                if (type == "offline") {
+                    scope.launch {
+                        val result = repository.createChallenge(
+                            challengedId = selectedMemberId!!,
+                            groupId = groupId,
+                            difficulty = difficulty,
+                            challengeType = type
+                        )
+                        result.fold(
+                            onSuccess = { response ->
+                                showChallengeDialog = false
+                                selectedMemberId = null
+                                challengedPlayerName = null
 
-                            // For offline challenges, challenger should start the game immediately
-                            if (type == "offline" && response.requiresChallengerCompletion == true) {
-                                response.challengeId?.let { challengeId ->
-                                    // Navigate to game with challenge context for challenger
-                                    // This will be handled by the parent navigation
-                                    Log.d("GroupMembersScreen", "Starting offline challenge game for challenger with ID: $challengeId")
-                                    onNavigateToGame(difficulty, challengeId)
+                                if (response.requiresChallengerCompletion == true) {
+                                    response.challengeId?.let { challengeId ->
+                                        Log.d("GroupMembersScreen", "Starting offline challenge game for challenger with ID: $challengeId")
+                                        onNavigateToGame(difficulty, challengeId)
+                                    }
                                 }
+                            },
+                            onFailure = { exception ->
+                                Log.e("GroupMembersScreen", "Failed to create challenge: ${exception.message}")
+                                errorMessage = exception.message ?: "Failed to create challenge"
                             }
-                        },
-                        onFailure = { exception ->
-                            Log.e("GroupMembersScreen", "Failed to create challenge: ${exception.message}")
-                            // Optionally show error message
-                        }
-                    )
+                        )
+                    }
                 }
-            }
+            },
+            repository = repository,
+            groupId = groupId,
+            selectedMemberId = selectedMemberId,
+            challengedPlayerName = members.find { it.player_id == selectedMemberId }?.username
+        )
+    }
+
+    // Show PendingChallengeCard if the state is set
+    if (showPendingChallengeCard && pendingMatchId != null && challengedPlayerName != null) {
+        PendingChallengeCard(
+            challengerName = challengedPlayerName!!,
+            matchId = pendingMatchId!!,
+            onCancelChallenge = { matchId ->
+                // Handle live match cancellation - return the actual result
+                val result = repository.cancelLiveMatch(matchId)
+                result.fold(
+                    onSuccess = {
+                        Log.d("GroupMembersScreen", "Live match cancelled successfully")
+                    },
+                    onFailure = { exception ->
+                        Log.e("GroupMembersScreen", "Failed to cancel live match: ${exception.message}")
+                        errorMessage = "Failed to cancel challenge: ${exception.message}"
+                    }
+                )
+                result
+            },
+            onDismiss = {
+                showPendingChallengeCard = false
+                pendingMatchId = null
+                challengedPlayerName = null
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
         )
     }
 }
@@ -581,82 +624,233 @@ private fun EmptyMembersMessage(
 @Composable
 private fun ChallengeDialog(
     onDismiss: () -> Unit,
-    onChallengeCreated: (String, String) -> Unit // Add challengeType parameter
+    onChallengeCreated: (String, String) -> Unit,
+    repository: SudokuRepository? = null,
+    groupId: Int = 0,
+    selectedMemberId: Int? = null,
+    challengedPlayerName: String? = null
 ) {
     var selectedDifficulty by remember { mutableStateOf("medium") }
     var selectedType by remember { mutableStateOf("offline") }
+    var isCreatingChallenge by remember { mutableStateOf(false) }
+    var isPendingLiveChallenge by remember { mutableStateOf(false) }
+    var pendingMatchId by remember { mutableStateOf<Int?>(null) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    val scope = rememberCoroutineScope()
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Create Challenge") },
+        title = {
+            Text(
+                if (isPendingLiveChallenge) "Live Challenge Pending"
+                else "Create Challenge"
+            )
+        },
         text = {
-            Column {
-                Text("Select challenge type:")
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Challenge type selection
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+            if (isPendingLiveChallenge) {
+                // Show pending challenge UI
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    listOf("offline", "online").forEach { type ->
-                        FilterChip(
-                            onClick = { selectedType = type },
-                            label = {
-                                Text(
-                                    when(type) {
-                                        "offline" -> "Offline"
-                                        "online" -> "Live"
-                                        else -> type
-                                    }
-                                )
-                            },
-                            selected = selectedType == type
+                    Text(
+                        text = "Waiting for ${challengedPlayerName ?: "opponent"} to accept...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(40.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        strokeWidth = 3.dp
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    errorMessage?.let { message ->
+                        Text(
+                            text = message,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+            } else {
+                // Show challenge creation UI
+                Column {
+                    Text("Select challenge type:")
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Challenge type selection
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf("offline", "online").forEach { type ->
+                            FilterChip(
+                                onClick = { selectedType = type },
+                                label = {
+                                    Text(
+                                        when(type) {
+                                            "offline" -> "Offline"
+                                            "online" -> "Live"
+                                            else -> type
+                                        }
+                                    )
+                                },
+                                selected = selectedType == type,
+                                enabled = !isCreatingChallenge
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text("Select difficulty:")
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Difficulty selection
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf("easy", "medium", "hard").forEach { difficulty ->
+                            FilterChip(
+                                onClick = { selectedDifficulty = difficulty },
+                                label = { Text(difficulty.uppercase()) },
+                                selected = selectedDifficulty == difficulty,
+                                enabled = !isCreatingChallenge
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Explanation text
+                    Text(
+                        text = when(selectedType) {
+                            "offline" -> "Offline: You play first, then your opponent gets the same puzzle with your time to beat."
+                            "online" -> "Live: Both players start the same puzzle simultaneously when accepted."
+                            else -> ""
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    errorMessage?.let { message ->
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = message,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
                         )
                     }
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text("Select difficulty:")
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Difficulty selection
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    listOf("easy", "medium", "hard").forEach { difficulty ->
-                        FilterChip(
-                            onClick = { selectedDifficulty = difficulty },
-                            label = { Text(difficulty.uppercase()) },
-                            selected = selectedDifficulty == difficulty
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Explanation text
-                Text(
-                    text = when(selectedType) {
-                        "offline" -> "Offline: You play first, then your opponent gets the same puzzle with your time to beat."
-                        "online" -> "Live: Both players start the same puzzle simultaneously when accepted."
-                        else -> ""
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         },
         confirmButton = {
-            Button(
-                onClick = { onChallengeCreated(selectedDifficulty, selectedType) }
-            ) {
-                Text("Create Challenge")
+            if (isPendingLiveChallenge) {
+                // Cancel live challenge button
+                OutlinedButton(
+                    onClick = {
+                        pendingMatchId?.let { matchId ->
+                            scope.launch {
+                                repository?.let { repo ->
+                                    val result = repo.cancelLiveMatch(matchId)
+                                    result.fold(
+                                        onSuccess = {
+                                            onDismiss()
+                                        },
+                                        onFailure = { exception ->
+                                            errorMessage = exception.message ?: "Failed to cancel challenge"
+                                        }
+                                    )
+                                }
+                            }
+                        } ?: onDismiss()
+                    },
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Cancel Challenge")
+                }
+            } else {
+                // Create challenge button
+                Button(
+                    onClick = {
+                        if (selectedType == "live" && repository != null && selectedMemberId != null) {
+                            // Handle live challenge creation with integrated pending state
+                            isCreatingChallenge = true
+                            errorMessage = null
+
+                            scope.launch {
+                                val result = repository.createChallenge(
+                                    challengedId = selectedMemberId,
+                                    groupId = groupId,
+                                    difficulty = selectedDifficulty,
+                                    challengeType = selectedType
+                                )
+
+                                result.fold(
+                                    onSuccess = { response ->
+                                        if (selectedType == "live") {
+                                            // Switch to pending state
+                                            response.matchId?.let { matchId ->
+                                                pendingMatchId = matchId
+                                                isPendingLiveChallenge = true
+                                                isCreatingChallenge = false
+                                            }
+                                        } else {
+                                            // Handle offline challenge
+                                            onChallengeCreated(selectedDifficulty, selectedType)
+                                        }
+                                    },
+                                    onFailure = { exception ->
+                                        errorMessage = exception.message ?: "Failed to create challenge"
+                                        isCreatingChallenge = false
+                                    }
+                                )
+                            }
+                        } else {
+                            // Handle offline challenge or fallback
+                            onChallengeCreated(selectedDifficulty, selectedType)
+                        }
+                    },
+                    enabled = !isCreatingChallenge
+                ) {
+                    if (isCreatingChallenge) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Creating...")
+                    } else {
+                        Text("Create Challenge")
+                    }
+                }
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
+            if (!isPendingLiveChallenge) {
+                TextButton(
+                    onClick = onDismiss,
+                    enabled = !isCreatingChallenge
+                ) {
+                    Text("Cancel")
+                }
             }
         }
     )

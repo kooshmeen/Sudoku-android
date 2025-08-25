@@ -533,4 +533,47 @@ class SudokuRepository(private val context: Context) {
             }
         }
     }
+
+    /**
+     * Get the data from a live match
+     */
+    suspend fun getLiveMatchStatus(matchId: Int): Result<LiveMatchStatus> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val token = authToken ?: return@withContext Result.failure(Exception("Not logged in"))
+                val response = apiService.getLiveMatchDetails("Bearer $token", matchId)
+
+                if (response.isSuccessful) {
+                    response.body()?.let { Result.success(it) }
+                        ?: Result.failure(Exception("Empty response"))
+                } else {
+                    Result.failure(Exception("Failed to get live match status: ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    /**
+     * Cancel a live match
+     */
+    suspend fun cancelLiveMatch(matchId: Int): Result<ApiResponse> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val token =
+                    authToken ?: return@withContext Result.failure(Exception("Not logged in"))
+                val response = apiService.cancelLiveMatch("Bearer $token", matchId)
+
+                if (response.isSuccessful) {
+                    response.body()?.let { Result.success(it) }
+                        ?: Result.failure(Exception("Empty response"))
+                } else {
+                    Result.failure(Exception("Failed to cancel live match: ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
 }

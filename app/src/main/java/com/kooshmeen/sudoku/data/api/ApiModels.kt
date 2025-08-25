@@ -191,3 +191,30 @@ data class ChallengeCompletionResponse(
     val challengedMistakes: Int?,
     val status: String?
 )
+
+data class LiveMatchStatus(
+    val id: Int,
+    val challenger_id: Int,
+    val challenged_id: Int,
+    val group_id: Int,
+    val difficulty: String,
+    val puzzleData: Map<String, Any>,
+    val status: String,
+    val created_at: String,
+    val expires_at: String? = null,
+    val challenger_start_time: String? = null,
+    val challenged_start_time: String? = null,
+    val challenger_finish_time: String? = null,
+    val challenged_finish_time: String? = null,
+    val challenger_time: Int? = null,
+    val challenged_time: Int? = null,
+    val challenger_score: Int? = null,
+    val challenged_score: Int? = null,
+    val challenger_mistakes: Int? = null,
+    val challenged_mistakes: Int? = null,
+    val challenger_finished: Boolean = false,
+    val challenged_finished: Boolean = false,
+    val started_at: String? = null,
+    val challenger_finished_at: String? = null,
+    val challenged_finished_at: String? = null,
+)

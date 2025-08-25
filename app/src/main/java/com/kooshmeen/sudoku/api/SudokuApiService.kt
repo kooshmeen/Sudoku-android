@@ -14,6 +14,7 @@ import com.kooshmeen.sudoku.data.api.GroupMembersResponse
 import com.kooshmeen.sudoku.data.api.GroupsResponse
 import com.kooshmeen.sudoku.data.api.LeaderboardResponse
 import com.kooshmeen.sudoku.data.api.LiveMatch
+import com.kooshmeen.sudoku.data.api.LiveMatchStatus
 import com.kooshmeen.sudoku.data.api.LoginRequest
 import com.kooshmeen.sudoku.data.api.LoginResponse
 import com.kooshmeen.sudoku.data.api.RegisterRequest
@@ -232,5 +233,19 @@ interface SudokuApiService {
         @Path("groupId") groupId: Int,
         @Path("memberId") memberId: Int,
         @Body statsUpdate: Map<String, Any>
+    ): Response<ApiResponse>
+
+    //getLiveMatchDetails
+    @GET("/matches/{matchId}")
+    suspend fun getLiveMatchDetails(
+        @Header("Authorization") token: String,
+        @Path("matchId") matchId: Int
+    ): Response<LiveMatchStatus>
+
+    //cancelLiveMatch
+    @POST("/matches/{matchId}/cancel")
+    suspend fun cancelLiveMatch(
+        @Header("Authorization") token: String,
+        @Path("matchId") matchId: Int
     ): Response<ApiResponse>
 }
