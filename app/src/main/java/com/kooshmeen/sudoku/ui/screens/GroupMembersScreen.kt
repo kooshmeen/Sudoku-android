@@ -295,9 +295,9 @@ fun GroupMembersScreen(
                 selectedMemberId = null
                 challengedPlayerName = null
             },
-            onChallengeCreated = { difficulty, type ->
-                // Handle offline challenge creation only (live challenges are handled internally)
+            onChallengeCreated = { difficulty, type, matchId ->
                 if (type == "offline") {
+                    // Handle offline challenge creation
                     scope.launch {
                         val result = repository.createChallenge(
                             challengedId = selectedMemberId!!,
@@ -324,6 +324,13 @@ fun GroupMembersScreen(
                             }
                         )
                     }
+                } else if (type == "online") {
+                    // For live challenges, show the pending challenge card
+                    showPendingChallengeCard = true
+                    pendingMatchId = matchId
+                    challengedPlayerName = members.find { it.player_id == selectedMemberId }?.username
+                    showChallengeDialog = false
+                    selectedMemberId = null
                 }
             },
             repository = repository,
@@ -624,7 +631,7 @@ private fun EmptyMembersMessage(
 @Composable
 private fun ChallengeDialog(
     onDismiss: () -> Unit,
-    onChallengeCreated: (String, String) -> Unit,
+    onChallengeCreated: (String, String, Int?) -> Unit,
     repository: SudokuRepository? = null,
     groupId: Int = 0,
     selectedMemberId: Int? = null,
@@ -789,7 +796,7 @@ private fun ChallengeDialog(
                 // Create challenge button
                 Button(
                     onClick = {
-                        if (selectedType == "live" && repository != null && selectedMemberId != null) {
+                        if (selectedType == "online" && repository != null && selectedMemberId != null) {
                             // Handle live challenge creation with integrated pending state
                             isCreatingChallenge = true
                             errorMessage = null
@@ -804,16 +811,14 @@ private fun ChallengeDialog(
 
                                 result.fold(
                                     onSuccess = { response ->
-                                        if (selectedType == "live") {
-                                            // Switch to pending state
+                                        if (selectedType == "online") {
+                                            // Call the callback to let the parent handle the pending state
                                             response.matchId?.let { matchId ->
-                                                pendingMatchId = matchId
-                                                isPendingLiveChallenge = true
-                                                isCreatingChallenge = false
+                                                onChallengeCreated(selectedDifficulty, selectedType, matchId)
                                             }
                                         } else {
                                             // Handle offline challenge
-                                            onChallengeCreated(selectedDifficulty, selectedType)
+                                            onChallengeCreated(selectedDifficulty, selectedType, response.challengeId)
                                         }
                                     },
                                     onFailure = { exception ->
@@ -824,7 +829,7 @@ private fun ChallengeDialog(
                             }
                         } else {
                             // Handle offline challenge or fallback
-                            onChallengeCreated(selectedDifficulty, selectedType)
+                            onChallengeCreated(selectedDifficulty, selectedType, null)
                         }
                     },
                     enabled = !isCreatingChallenge

@@ -236,14 +236,14 @@ interface SudokuApiService {
     ): Response<ApiResponse>
 
     //getLiveMatchDetails
-    @GET("/matches/{matchId}")
+    @GET("matches/{matchId}")
     suspend fun getLiveMatchDetails(
         @Header("Authorization") token: String,
         @Path("matchId") matchId: Int
     ): Response<LiveMatchStatus>
 
     //cancelLiveMatch
-    @POST("/matches/{matchId}/cancel")
+    @POST("matches/{matchId}/cancel")
     suspend fun cancelLiveMatch(
         @Header("Authorization") token: String,
         @Path("matchId") matchId: Int
