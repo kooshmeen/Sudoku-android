@@ -327,34 +327,41 @@ private fun ChallengeCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Accept button
-            Button(
-                onClick = { onAcceptChallenge(challenge.id) },
-                modifier = Modifier.fillMaxWidth()
+            // Action buttons - Reject and Accept in a row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.PlayArrow,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Accept Challenge")
-            }
-            // Reject button
-            OutlinedButton(
-                onClick = { onRejectChallenge(challenge.id) },
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                )
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Reject")
+                // Reject button
+                OutlinedButton(
+                    onClick = { onRejectChallenge(challenge.id) },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Reject")
+                }
+
+                // Accept button
+                Button(
+                    onClick = { onAcceptChallenge(challenge.id) },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Accept")
+                }
             }
         }
     }
@@ -437,34 +444,41 @@ private fun LiveMatchCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Accept button
-            Button(
-                onClick = { onAcceptMatch(liveMatch.id) },
-                modifier = Modifier.fillMaxWidth()
+            // Action buttons - Decline and Accept in a row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.PlayArrow,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Join Live Match")
-            }
-            // Reject button
-            OutlinedButton(
-                onClick = { onRejectMatch(liveMatch.id) },
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                )
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Decline")
+                // Decline button
+                OutlinedButton(
+                    onClick = { onRejectMatch(liveMatch.id) },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Decline")
+                }
+
+                // Accept button
+                Button(
+                    onClick = { onAcceptMatch(liveMatch.id) },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Join")
+                }
             }
         }
     }

@@ -565,13 +565,13 @@ private fun GroupCard(
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                             }
-                            IconButton(onClick = { group.id?.let { onLeaderboardClick(it) } }) {
-                                Icon(
-                                    imageVector = Icons.Default.Leaderboard,
-                                    contentDescription = "View Leaderboard",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
+//                            IconButton(onClick = { group.id?.let { onLeaderboardClick(it) } }) {
+//                                Icon(
+//                                    imageVector = Icons.Default.Leaderboard,
+//                                    contentDescription = "View Leaderboard",
+//                                    tint = MaterialTheme.colorScheme.primary
+//                                )
+//                            }
                         }
                         if (group.user_role == "owner") {
                             IconButton(onClick = { group.id?.let { onDeleteClick(it) } }) {
@@ -607,6 +607,54 @@ private fun GroupCard(
                     }
                 }
             }
+        }
+    }
+}
+
+@Preview
+@Composable
+fun GroupCardPreview() {
+    SudokuTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            GroupCard(
+                group = GroupData(
+                    id = 1,
+                    group_name = "Chess Enthusiasts",
+                    group_description = "A group for people who love chess.",
+                    is_private = false,
+                    member_count = 42,
+                    user_role = "member"
+                ),
+                isLoggedIn = true,
+                isMyGroup = true,
+                onJoinClick = {},
+                onLeaveClick = {},
+                onDeleteClick = {},
+                onLeaderboardClick = {},
+                onViewMembersClick = {}
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            GroupCard(
+                group = GroupData(
+                    id = 2,
+                    group_name = "Private Gamers",
+                    group_description = "Exclusive group for private gaming sessions.",
+                    is_private = true,
+                    member_count = 15,
+                    user_role = null
+                ),
+                isLoggedIn = true,
+                isMyGroup = false,
+                onJoinClick = {},
+                onLeaveClick = {},
+                onDeleteClick = {},
+                onLeaderboardClick = {},
+                onViewMembersClick = {}
+            )
         }
     }
 }
