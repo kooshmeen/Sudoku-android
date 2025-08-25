@@ -445,13 +445,49 @@ class SudokuRepository(private val context: Context) {
     }
 
     /**
+     * Get pending live matches for current user
+     */
+    suspend fun getPendingLiveMatches(): Result<List<LiveMatch>> {
+        return try {
+            val token = authToken ?: return Result.failure(Exception("Not authenticated"))
+            val response = apiService.getPendingLiveMatches("Bearer $token")
+
+            if (response.isSuccessful) {
+                val matches = response.body()?.get("matches") as? List<LiveMatch> ?: emptyList()
+                Result.success(matches)
+            } else {
+                Result.failure(Exception("Failed to get live matches: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Accept a live match invitation
+     */
+    suspend fun acceptLiveMatch(matchId: Int): Result<Map<String, Any>> {
+        return try {
+            val token = authToken ?: return Result.failure(Exception("Not authenticated"))
+            val response = apiService.acceptLiveMatch("Bearer $token", matchId)
+
+            if (response.isSuccessful) {
+                Result.success(response.body() ?: emptyMap())
+            } else {
+                Result.failure(Exception("Failed to accept live match: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
      * Accept a challenge invitation
      */
     suspend fun acceptChallenge(challengeId: Int): Result<Map<String, Any>> {
         return try {
             val token = authToken ?: return Result.failure(Exception("Not authenticated"))
             val response = apiService.acceptChallenge("Bearer $token", challengeId)
-
             if (response.isSuccessful) {
                 Result.success(response.body() ?: emptyMap())
             } else {

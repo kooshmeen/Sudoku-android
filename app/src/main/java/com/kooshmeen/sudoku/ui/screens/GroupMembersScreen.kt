@@ -297,35 +297,19 @@ fun GroupMembersScreen(
             },
             onChallengeCreated = { difficulty, type, matchId ->
                 if (type == "offline") {
-                    // Handle offline challenge creation
-                    scope.launch {
-                        val result = repository.createChallenge(
-                            challengedId = selectedMemberId!!,
-                            groupId = groupId,
-                            difficulty = difficulty,
-                            challengeType = type
-                        )
-                        result.fold(
-                            onSuccess = { response ->
-                                showChallengeDialog = false
-                                selectedMemberId = null
-                                challengedPlayerName = null
+                    // Handle offline challenge creation - this is called after the challenge is already created in ChallengeDialog
+                    showChallengeDialog = false
+                    selectedMemberId = null
+                    challengedPlayerName = null
 
-                                if (response.requiresChallengerCompletion == true) {
-                                    response.challengeId?.let { challengeId ->
-                                        Log.d("GroupMembersScreen", "Starting offline challenge game for challenger with ID: $challengeId")
-                                        onNavigateToGame(difficulty, challengeId)
-                                    }
-                                }
-                            },
-                            onFailure = { exception ->
-                                Log.e("GroupMembersScreen", "Failed to create challenge: ${exception.message}")
-                                errorMessage = exception.message ?: "Failed to create challenge"
-                            }
-                        )
+                    // For offline challenges, we need to check if challenger needs to play first
+                    matchId?.let { challengeId ->
+                        Log.d("GroupMembersScreen", "Starting offline challenge game for challenger with ID: $challengeId")
+                        onNavigateToGame(difficulty, challengeId)
                     }
                 } else if (type == "online") {
-                    // For live challenges, show the pending challenge card
+                    // For live challenges, the challenge has already been created in ChallengeDialog
+                    // Just show the pending challenge card with the returned matchId
                     showPendingChallengeCard = true
                     pendingMatchId = matchId
                     challengedPlayerName = members.find { it.player_id == selectedMemberId }?.username
@@ -796,12 +780,13 @@ private fun ChallengeDialog(
                 // Create challenge button
                 Button(
                     onClick = {
-                        if (selectedType == "online" && repository != null && selectedMemberId != null) {
-                            // Handle live challenge creation with integrated pending state
+                        if (repository != null && selectedMemberId != null) {
+                            // Handle both live and offline challenge creation
                             isCreatingChallenge = true
                             errorMessage = null
 
                             scope.launch {
+                                Log.d("ChallengeDialog", "Creating $selectedType challenge against player ID $selectedMemberId with difficulty $selectedDifficulty in group $groupId")
                                 val result = repository.createChallenge(
                                     challengedId = selectedMemberId,
                                     groupId = groupId,
@@ -812,12 +797,12 @@ private fun ChallengeDialog(
                                 result.fold(
                                     onSuccess = { response ->
                                         if (selectedType == "online") {
-                                            // Call the callback to let the parent handle the pending state
+                                            // For live challenges, pass the matchId
                                             response.matchId?.let { matchId ->
                                                 onChallengeCreated(selectedDifficulty, selectedType, matchId)
                                             }
                                         } else {
-                                            // Handle offline challenge
+                                            // For offline challenges, pass the challengeId
                                             onChallengeCreated(selectedDifficulty, selectedType, response.challengeId)
                                         }
                                     },
@@ -828,7 +813,7 @@ private fun ChallengeDialog(
                                 )
                             }
                         } else {
-                            // Handle offline challenge or fallback
+                            // Fallback - should not normally happen
                             onChallengeCreated(selectedDifficulty, selectedType, null)
                         }
                     },
