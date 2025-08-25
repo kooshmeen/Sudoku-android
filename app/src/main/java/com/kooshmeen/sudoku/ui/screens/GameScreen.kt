@@ -64,9 +64,12 @@ fun GameScreen(
     isDarkTheme: Boolean = true, // Default value for dark theme
     onNavigateToMenu: () -> Unit = { /* Default no-op */ },
     onNavigateToChallengeResult: (Int, Int, Int) -> Unit = { _, _, _ -> }, // challengeId, timeSeconds, mistakes
+    onNavigateToLiveMatchResult: (Int, Int, Int) -> Unit = { _, _, _ -> }, // liveMatchId, timeSeconds, mistakes
     challengeId: Int? = null, // Optional challenge ID for challenges mode
+    liveMatchId: Int? = null, // Optional live match ID for live matches
     difficulty: String? = null, // Optional difficulty override for challenges
-    challengeRole: String? = null // "challenger" or "challenged" to distinguish roles
+    challengeRole: String? = null, // "challenger" or "challenged" to distinguish roles
+    isLiveMatch: Boolean = false // Flag to indicate if this is a live match
 ) {
     val gameState = GameStateManager.gameState
     var showCompletionDialog by remember { mutableStateOf(false) }
@@ -75,9 +78,53 @@ fun GameScreen(
     var isChallenge by remember { mutableStateOf(challengeId != null) }
     var challengeData by remember { mutableStateOf<Map<String, Any>?>(null) }
 
+    // Live match specific state variables
+    var opponentFinished by remember { mutableStateOf(false) }
+    var isPolling by remember { mutableStateOf(isLiveMatch) }
+
     val context = LocalContext.current
     val repository = remember { SudokuRepository(context) }
     val scope = rememberCoroutineScope()
+
+    // Live match polling logic
+    LaunchedEffect(isLiveMatch, liveMatchId, isPolling) {
+        if (isLiveMatch && liveMatchId != null && isPolling) {
+            while (isPolling) {
+                delay(1000) // Poll every second
+                scope.launch {
+                    val result = repository.getLiveMatchStatus(liveMatchId)
+                    result.fold(
+                        onSuccess = { matchStatus ->
+                            // Update opponent status based on match data
+                            val currentUserId = repository.fetchCurrentUser()?.id
+                            if (currentUserId == matchStatus.challenger_id) {
+                                // Current user is challenger, check challenged status
+                                opponentFinished = matchStatus.challenged_finished
+                                if (matchStatus.challenged_time != null) {
+                                    opponentTime = matchStatus.challenged_time
+                                }
+                            } else {
+                                // Current user is challenged, check challenger status
+                                opponentFinished = matchStatus.challenger_finished
+                                if (matchStatus.challenger_time != null) {
+                                    opponentTime = matchStatus.challenger_time
+                                }
+                            }
+
+                            // Stop polling if match is completed
+                            if (matchStatus.status == "completed" || matchStatus.status == "results_ready") {
+                                isPolling = false
+                            }
+                        },
+                        onFailure = { exception ->
+                            // Handle polling error - maybe reduce frequency or stop
+                            println("Live match polling error: ${exception.message}")
+                        }
+                    )
+                }
+            }
+        }
+    }
 
     // Load challenge data if this is a challenge game
     LaunchedEffect(challengeId, difficulty) {
@@ -116,6 +163,47 @@ fun GameScreen(
         }
     }
 
+    // Load live match data if this is a live match
+    LaunchedEffect(liveMatchId, isLiveMatch) {
+        if (isLiveMatch && liveMatchId != null) {
+            scope.launch {
+                val result = repository.getLiveMatchStatus(liveMatchId)
+                result.fold(
+                    onSuccess = { matchStatus ->
+                        // Parse the puzzle data from JSON string
+                        try {
+                            val puzzleDataString = matchStatus.puzzle_data
+                            if (puzzleDataString.isNotEmpty()) {
+                                // Parse the JSON string to extract puzzle data
+                                // The JSON contains: {"puzzle":[...], "solution":[...], "difficulty":"..."}
+                                val gson = com.google.gson.Gson()
+                                val puzzleData = gson.fromJson(puzzleDataString, Map::class.java) as Map<String, Any>
+                                GameStateManager.loadChallengeGame(puzzleData, matchStatus.difficulty, context)
+                            } else {
+                                // Fallback to creating new game
+                                difficulty?.let { diff ->
+                                    GameStateManager.startNewGame(diff, context)
+                                }
+                            }
+                        } catch (e: Exception) {
+                            // Handle JSON parsing error
+                            println("Error parsing puzzle data: ${e.message}")
+                            difficulty?.let { diff ->
+                                GameStateManager.startNewGame(diff, context)
+                            }
+                        }
+                    },
+                    onFailure = { exception ->
+                        // Handle error loading live match data
+                        difficulty?.let { diff ->
+                            GameStateManager.startNewGame(diff, context)
+                        }
+                    }
+                )
+            }
+        }
+    }
+
     // Timer effect - only run when game is active and not paused
     LaunchedEffect(gameState.isGameActive, gameState.isPaused) {
         while (gameState.isGameActive && !gameState.isPaused) {
@@ -140,15 +228,42 @@ fun GameScreen(
         Row(
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Timer
+            // Timer with color logic for live matches
             Text(
                 text = "Elapsed: ${gameState.getFormattedTime()}",
                 style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(start = 8.dp)
+                modifier = Modifier.padding(start = 8.dp),
+                color = if (isLiveMatch) {
+                    if (opponentFinished) MaterialTheme.colorScheme.error // Red when opponent finished
+                    else MaterialTheme.colorScheme.primary // Blue when opponent hasn't finished
+                } else MaterialTheme.colorScheme.onSurface // Default color for non-live matches
             )
 
-            // If in challenge mode, show opponent's time
-
+            // Show opponent info for both challenges and live matches
+            if ((isChallenge || isLiveMatch) && opponentTime != null) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.Accessibility,
+                        contentDescription = null,
+                        tint = if (isLiveMatch && opponentFinished)
+                            MaterialTheme.colorScheme.error
+                        else MaterialTheme.colorScheme.secondary
+                    )
+                    Text(
+                        text = formatTime(opponentTime!!),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isLiveMatch && opponentFinished)
+                            MaterialTheme.colorScheme.error
+                        else MaterialTheme.colorScheme.secondary
+                    )
+                    Text(
+                        text = if (isLiveMatch) "Live Opponent" else "Opponent",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
 
             Spacer(Modifier.weight(1f)) // Push the difficulty indicator to the end
             // Difficulty indicator
@@ -171,27 +286,6 @@ fun GameScreen(
                     contentDescription = "Back to Main Menu",
                     tint = MaterialTheme.colorScheme.onBackground // Use MaterialTheme for icon color
                 )
-            }
-
-            if (isChallenge && opponentTime != null) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        imageVector = Icons.Default.Accessibility,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.secondary
-                    )
-                    Text(
-                        text = formatTime(opponentTime!!),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                    Text(
-                        text = "Opponent",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             }
 
             Spacer(Modifier.weight(1f)) // Push the pause button to the end
@@ -367,6 +461,25 @@ fun GameScreen(
                         onNavigateToChallengeResult(challengeId, gameState.elapsedTimeSeconds, gameState.mistakesCount)
                         return@LaunchedEffect
                     }
+                } else if (isLiveMatch && liveMatchId != null) {
+                    // Handle live match completion
+                    val liveMatchResult = repository.completeLiveMatch(
+                        matchId = liveMatchId,
+                        timeSeconds = gameState.elapsedTimeSeconds,
+                        mistakes = gameState.mistakesCount
+                    )
+                    liveMatchResult.fold(
+                        onSuccess = {
+                            // Successfully submitted live match completion
+                            println("Live match completed successfully.")
+                            // Navigate to live match results
+                            onNavigateToLiveMatchResult(liveMatchId, gameState.elapsedTimeSeconds, gameState.mistakesCount)
+                        },
+                        onFailure = { exception ->
+                            // Handle error submitting live match completion
+                            println("Error submitting live match completion: ${exception.message}")
+                        }
+                    )
                 }
             }
 

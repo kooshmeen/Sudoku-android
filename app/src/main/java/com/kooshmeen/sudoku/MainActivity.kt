@@ -30,6 +30,7 @@ import com.kooshmeen.sudoku.ui.screens.GameScreen
 import com.kooshmeen.sudoku.ui.screens.GroupMembersScreen
 import com.kooshmeen.sudoku.ui.screens.GroupsScreen
 import com.kooshmeen.sudoku.ui.screens.LeaderboardScreen
+import com.kooshmeen.sudoku.ui.screens.LiveMatchResultScreen
 import com.kooshmeen.sudoku.ui.screens.MainMenu
 import com.kooshmeen.sudoku.ui.screens.RecordScreen
 import com.kooshmeen.sudoku.ui.screens.SettingsScreen
@@ -108,10 +109,15 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 composable(
-                    "game/{difficulty}?challengeId={challengeId}&challengeRole={challengeRole}",
+                    "game/{difficulty}?challengeId={challengeId}&liveMatchId={liveMatchId}&challengeRole={challengeRole}",
                     arguments = listOf(
                         navArgument("difficulty") { type = NavType.StringType },
                         navArgument("challengeId") {
+                            type = NavType.StringType
+                            nullable = true
+                            defaultValue = null
+                        },
+                        navArgument("liveMatchId") {
                             type = NavType.StringType
                             nullable = true
                             defaultValue = null
@@ -127,6 +133,8 @@ class MainActivity : ComponentActivity() {
                         val difficulty = backStackEntry.arguments?.getString("difficulty") ?: "medium"
                         val challengeIdString = backStackEntry.arguments?.getString("challengeId")
                         val challengeId = challengeIdString?.takeIf { it != "null" }?.toIntOrNull()
+                        val liveMatchIdString = backStackEntry.arguments?.getString("liveMatchId")
+                        val liveMatchId = liveMatchIdString?.takeIf { it != "null" }?.toIntOrNull()
                         val challengeRole = backStackEntry.arguments?.getString("challengeRole")?.takeIf { it != "null" }
 
                         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -142,9 +150,14 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToChallengeResult = { challengeId, timeSeconds, mistakes ->
                                     NavController.navigate("challenge_result/$challengeId/$timeSeconds/$mistakes")
                                 },
+                                onNavigateToLiveMatchResult = { liveMatchId, timeSeconds, mistakes ->
+                                    NavController.navigate("live_match_result/$liveMatchId/$timeSeconds/$mistakes")
+                                },
                                 challengeId = challengeId,
+                                liveMatchId = liveMatchId,
                                 difficulty = difficulty,
-                                challengeRole = challengeRole
+                                challengeRole = challengeRole,
+                                isLiveMatch = liveMatchId != null
                             )
                         }
                     }
@@ -247,9 +260,22 @@ class MainActivity : ComponentActivity() {
                                 onNavigateBack = {
                                     NavController.navigateUp()
                                 },
-                                onNavigateToGame = { difficulty, challengeId ->
-                                    // Navigate to game with challenge context for challenged player
-                                    NavController.navigate("game/$difficulty?challengeId=$challengeId&challengeRole=challenged")
+                                onNavigateToGame = { difficulty, challengeId, liveMatchId ->
+                                    // Navigate to game with appropriate context
+                                    when {
+                                        challengeId != null -> {
+                                            // Regular challenge - challenged player
+                                            NavController.navigate("game/$difficulty?challengeId=$challengeId&challengeRole=challenged")
+                                        }
+                                        liveMatchId != null -> {
+                                            // Live match
+                                            NavController.navigate("game/$difficulty?liveMatchId=$liveMatchId")
+                                        }
+                                        else -> {
+                                            // Fallback to regular game
+                                            NavController.navigate("game/$difficulty")
+                                        }
+                                    }
                                 },
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -267,6 +293,28 @@ class MainActivity : ComponentActivity() {
                         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                             ChallengeResultScreen(
                                 challengeId = challengeId,
+                                timeSeconds = timeSeconds,
+                                mistakes = mistakes,
+                                onNavigateBack = {
+                                    // Navigate back to challenges or groups
+                                    NavController.popBackStack("challenges_screen", false)
+                                },
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(innerPadding)
+                            )
+                        }
+                    }
+                }
+                composable("live_match_result/{matchId}/{timeSeconds}/{mistakes}") { backStackEntry ->
+                    SudokuTheme(darkTheme = isDarkTheme) {
+                        val matchId = backStackEntry.arguments?.getString("matchId")?.toIntOrNull() ?: 0
+                        val timeSeconds = backStackEntry.arguments?.getString("timeSeconds")?.toIntOrNull() ?: 0
+                        val mistakes = backStackEntry.arguments?.getString("mistakes")?.toIntOrNull() ?: 0
+
+                        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                            LiveMatchResultScreen(
+                                matchId = matchId,
                                 timeSeconds = timeSeconds,
                                 mistakes = mistakes,
                                 onNavigateBack = {

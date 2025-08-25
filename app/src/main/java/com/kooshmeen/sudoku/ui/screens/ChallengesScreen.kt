@@ -41,7 +41,7 @@ sealed class PendingInvitation {
 fun ChallengesScreen(
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {},
-    onNavigateToGame: (difficulty: String, challengeId: Int?) -> Unit = { _, _ -> }
+    onNavigateToGame: (difficulty: String, challengeId: Int?, liveMatchId: Int?) -> Unit = { _, _, _ -> }
 ) {
     var pendingInvitations by remember { mutableStateOf<List<PendingInvitation>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
@@ -172,7 +172,7 @@ fun ChallengesScreen(
                                                 val result = repository.acceptChallenge(challengeId)
                                                 result.fold(
                                                     onSuccess = {
-                                                        onNavigateToGame(invitation.invitation.difficulty, challengeId)
+                                                        onNavigateToGame(invitation.invitation.difficulty, challengeId, null)
                                                     },
                                                     onFailure = { exception ->
                                                         errorMessage = exception.message
@@ -209,8 +209,8 @@ fun ChallengesScreen(
                                                 val result = repository.acceptLiveMatch(matchId)
                                                 result.fold(
                                                     onSuccess = {
-                                                        // Navigate to live game
-                                                        onNavigateToGame(invitation.match.difficulty, matchId)
+                                                        // Navigate to live game with the live match ID
+                                                        onNavigateToGame(invitation.match.difficulty, null, matchId)
                                                     },
                                                     onFailure = { exception ->
                                                         errorMessage = exception.message

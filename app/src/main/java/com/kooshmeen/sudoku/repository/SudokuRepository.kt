@@ -580,8 +580,9 @@ class SudokuRepository(private val context: Context) {
                 val response = apiService.getLiveMatchDetails("Bearer $token", matchId)
 
                 if (response.isSuccessful) {
-                    response.body()?.let { Result.success(it) }
-                        ?: Result.failure(Exception("Empty response"))
+                    response.body()?.let { liveMatchResponse ->
+                        Result.success(liveMatchResponse.match)
+                    } ?: Result.failure(Exception("Empty response"))
                 } else {
                     Result.failure(Exception("Failed to get live match status: ${response.message()}"))
                 }
@@ -610,6 +611,29 @@ class SudokuRepository(private val context: Context) {
             } catch (e: Exception) {
                 Result.failure(e)
             }
+        }
+    }
+
+    /**
+     * Complete a live match
+     */
+    suspend fun completeLiveMatch(
+        matchId: Int,
+        timeSeconds: Int,
+        mistakes: Int
+    ): Result<LiveMatchCompletionResponse> {
+        return try {
+            val token = authToken ?: return Result.failure(Exception("Not authenticated"))
+            val request = LiveMatchCompletionRequest(timeSeconds, mistakes)
+            val response = apiService.completeLiveMatch("Bearer $token", matchId, request)
+
+            if (response.isSuccessful) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Failed to complete live match: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 }

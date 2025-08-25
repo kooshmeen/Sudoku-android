@@ -179,7 +179,6 @@ data class ChallengerCompletionRequest(
     val puzzleData: Map<String, Any>
 )
 
-// In ApiModels.kt
 data class ChallengeCompletionResponse(
     val message: String,
     val winner: String?,
@@ -198,7 +197,7 @@ data class LiveMatchStatus(
     val challenged_id: Int,
     val group_id: Int,
     val difficulty: String,
-    val puzzleData: Map<String, Any>,
+    val puzzle_data: String, // Changed from Map<String, Any> to String since server sends JSON string
     val status: String,
     val created_at: String,
     val expires_at: String? = null,
@@ -217,4 +216,29 @@ data class LiveMatchStatus(
     val started_at: String? = null,
     val challenger_finished_at: String? = null,
     val challenged_finished_at: String? = null,
+    // Additional fields from server response
+    val challenger_username: String? = null,
+    val challenged_username: String? = null,
+    val group_name: String? = null
+)
+
+data class LiveMatchCompletionRequest(
+    val timeSeconds: Int,
+    val mistakes: Int
+)
+
+data class LiveMatchCompletionResponse(
+    val status: String, // "waiting_for_opponent" or "match_completed"
+    val winner: String? = null,
+    val challengerTime: Int? = null,
+    val challengedTime: Int? = null,
+    val challengerScore: Int? = null,
+    val challengedScore: Int? = null
+)
+
+/**
+ * Wrapper for live match API response
+ */
+data class LiveMatchResponse(
+    val match: LiveMatchStatus
 )
