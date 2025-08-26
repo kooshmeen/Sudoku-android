@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -132,7 +133,7 @@ fun ChallengeResultScreen(
                                     "challenged" -> Icons.Default.EmojiEvents
                                     "challenger" -> Icons.Default.ThumbDown
                                     "draw" -> Icons.Default.Balance
-                                    else -> Icons.Default.Help
+                                    else -> Icons.AutoMirrored.Filled.Help
                                 },
                                 contentDescription = null,
                                 modifier = Modifier.size(48.dp),

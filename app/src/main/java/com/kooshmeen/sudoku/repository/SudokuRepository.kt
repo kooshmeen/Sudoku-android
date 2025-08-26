@@ -636,4 +636,37 @@ class SudokuRepository(private val context: Context) {
             Result.failure(e)
         }
     }
+
+    /**
+     * Upload puzzle data and set status to active for a live match
+     */
+    suspend fun startLiveMatch(
+        matchId: Int,
+        puzzleData: Map<String, Any>
+    ): Result<ApiResponse> {
+        return try {
+            val token = authToken ?: return Result.failure(Exception("Not authenticated"))
+
+            // Convert the generic map to the proper data class
+            val puzzle = puzzleData["puzzle"] as? List<Int> ?: emptyList()
+            val solution = puzzleData["solution"] as? List<Int> ?: emptyList()
+            val difficulty = puzzleData["difficulty"] as? String ?: "medium"
+
+            val uploadRequest = LiveMatchPuzzleUpload(
+                puzzle = puzzle,
+                solution = solution,
+                difficulty = difficulty
+            )
+
+            val response = apiService.startLiveMatch("Bearer $token", matchId, uploadRequest)
+
+            if (response.isSuccessful) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Failed to upload puzzle: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

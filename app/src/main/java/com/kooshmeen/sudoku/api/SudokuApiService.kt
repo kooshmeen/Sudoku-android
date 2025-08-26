@@ -21,6 +21,7 @@ import com.kooshmeen.sudoku.data.api.LiveMatchStatus
 import com.kooshmeen.sudoku.data.api.LoginRequest
 import com.kooshmeen.sudoku.data.api.LoginResponse
 import com.kooshmeen.sudoku.data.api.RegisterRequest
+import com.kooshmeen.sudoku.data.api.LiveMatchPuzzleUpload
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -259,4 +260,12 @@ interface SudokuApiService {
         @Path("matchId") matchId: Int,
         @Body request: LiveMatchCompletionRequest
     ): Response<LiveMatchCompletionResponse>
+
+    //startLiveMatch - uploads puzzle data and sets status to active
+    @POST("matches/{matchId}/start")
+    suspend fun startLiveMatch(
+        @Header("Authorization") token: String,
+        @Path("matchId") matchId: Int,
+        @Body request: LiveMatchPuzzleUpload
+    ): Response<ApiResponse>
 }

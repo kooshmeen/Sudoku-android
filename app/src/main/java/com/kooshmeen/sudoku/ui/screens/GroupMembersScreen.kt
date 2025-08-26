@@ -43,7 +43,7 @@ fun GroupMembersScreen(
     groupId: Int,
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {},
-    onNavigateToGame: (difficulty: String, challengeId: Int) -> Unit = { _, _ -> }
+    onNavigateToGame: (difficulty: String, challengeId: Int?, liveMatchId: Int?) -> Unit = { _, _, _ -> }
 ) {
     var groupData by remember { mutableStateOf<GroupData?>(null) }
     var members by remember { mutableStateOf<List<GroupMember>>(emptyList()) }
@@ -305,7 +305,7 @@ fun GroupMembersScreen(
                     // For offline challenges, we need to check if challenger needs to play first
                     matchId?.let { challengeId ->
                         Log.d("GroupMembersScreen", "Starting offline challenge game for challenger with ID: $challengeId")
-                        onNavigateToGame(difficulty, challengeId)
+                        onNavigateToGame(difficulty, challengeId, null)
                     }
                 } else if (type == "online") {
                     // For live challenges, the challenge has already been created in ChallengeDialog
@@ -348,6 +348,7 @@ fun GroupMembersScreen(
                 pendingMatchId = null
                 challengedPlayerName = null
             },
+            onNavigateToGame = onNavigateToGame, // Pass the navigation callback
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)

@@ -237,6 +237,15 @@ data class LiveMatchCompletionResponse(
 )
 
 /**
+ * Data class for uploading puzzle data to start a live match
+ */
+data class LiveMatchPuzzleUpload(
+    val puzzle: List<Int>,
+    val solution: List<Int>,
+    val difficulty: String
+)
+
+/**
  * Wrapper for live match API response
  */
 data class LiveMatchResponse(

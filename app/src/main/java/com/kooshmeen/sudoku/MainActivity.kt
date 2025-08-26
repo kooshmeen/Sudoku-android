@@ -241,7 +241,7 @@ class MainActivity : ComponentActivity() {
                                     onNavigateBack = {
                                         NavController.navigateUp()
                                     },
-                                    onNavigateToGame = { difficulty, challengeId ->
+                                    onNavigateToGame = { difficulty, challengeId, _ ->
                                         // Navigate to game with challenge context for challenger
                                         NavController.navigate("game/$difficulty?challengeId=$challengeId&challengeRole=challenger")
                                     },
