@@ -69,7 +69,7 @@ object BestTimeManager {
         val editor = prefs.edit()
 
         //debug: show number of mistakes
-        println("Number of mistakes: $numMistakes")
+        //println("Number of mistakes: $numMistakes")
 
         // Convert time string to milliseconds
         val parts = time.split(":")

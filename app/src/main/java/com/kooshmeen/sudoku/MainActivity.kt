@@ -241,9 +241,19 @@ class MainActivity : ComponentActivity() {
                                     onNavigateBack = {
                                         NavController.navigateUp()
                                     },
-                                    onNavigateToGame = { difficulty, challengeId, _ ->
+                                    onNavigateToGame = { difficulty, challengeId, liveMatchId, challengeRole ->
                                         // Navigate to game with challenge context for challenger
-                                        NavController.navigate("game/$difficulty?challengeId=$challengeId&challengeRole=challenger")
+                                        when {
+                                            challengeId != null && challengeRole != null -> {
+                                                NavController.navigate("game/$difficulty?challengeId=$challengeId&challengeRole=$challengeRole")
+                                            }
+                                            liveMatchId != null && challengeRole != null -> {
+                                                NavController.navigate("game/$difficulty?liveMatchId=$liveMatchId&challengeRole=$challengeRole")
+                                            }
+                                            else -> {
+                                                NavController.navigate("game/$difficulty")
+                                            }
+                                        }
                                     },
                                     modifier = Modifier
                                         .fillMaxSize()
@@ -260,16 +270,16 @@ class MainActivity : ComponentActivity() {
                                 onNavigateBack = {
                                     NavController.navigateUp()
                                 },
-                                onNavigateToGame = { difficulty, challengeId, liveMatchId ->
+                                onNavigateToGame = { difficulty, challengeId, liveMatchId, challengeRole ->
                                     // Navigate to game with appropriate context
                                     when {
-                                        challengeId != null -> {
+                                        challengeId != null && challengeRole != null -> {
                                             // Regular challenge - challenged player
-                                            NavController.navigate("game/$difficulty?challengeId=$challengeId&challengeRole=challenged")
+                                            NavController.navigate("game/$difficulty?challengeId=$challengeId&challengeRole=$challengeRole")
                                         }
-                                        liveMatchId != null -> {
+                                        liveMatchId != null && challengeRole != null -> {
                                             // Live match
-                                            NavController.navigate("game/$difficulty?liveMatchId=$liveMatchId")
+                                            NavController.navigate("game/$difficulty?liveMatchId=$liveMatchId&challengeRole=$challengeRole")
                                         }
                                         else -> {
                                             // Fallback to regular game

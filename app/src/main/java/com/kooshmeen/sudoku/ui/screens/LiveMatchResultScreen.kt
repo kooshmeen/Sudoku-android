@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kooshmeen.sudoku.data.api.LiveMatchCompletionResponse
 import com.kooshmeen.sudoku.repository.SudokuRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -35,6 +36,8 @@ fun LiveMatchResultScreen(
     var matchResult by remember { mutableStateOf<LiveMatchCompletionResponse?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isPolling by remember { mutableStateOf(false) }
+    var currentUserRole by remember { mutableStateOf<String?>(null) } // Track if user is challenger or challenged
 
     val context = LocalContext.current
     val repository = remember { SudokuRepository(context) }
@@ -43,21 +46,75 @@ fun LiveMatchResultScreen(
     // Submit live match completion and get results
     LaunchedEffect(matchId) {
         scope.launch {
+            // First, get the match details to determine current user's role
+            val matchStatusResult = repository.getLiveMatchStatus(matchId)
+            matchStatusResult.fold(
+                onSuccess = { matchStatus ->
+                    val currentUserId = repository.fetchCurrentUser()?.id
+                    currentUserRole = when (currentUserId) {
+                        matchStatus.challenger_id -> "challenger"
+                        matchStatus.challenged_id -> "challenged"
+                        else -> null
+                    }
+                },
+                onFailure = { exception ->
+                    println("Failed to get match status: ${exception.message}")
+                }
+            )
+
             val result = repository.completeLiveMatch(matchId, timeSeconds, mistakes)
             result.fold(
                 onSuccess = { response ->
                     matchResult = response
                     isLoading = false
 
-                    // The backend should handle updating win/loss stats automatically
-                    // when the live match is completed, but we could add additional
-                    // client-side handling here if needed
+                    // If status is "waiting_for_opponent", start polling for final results
+                    if (response.status == "waiting_for_opponent") {
+                        isPolling = true
+                    }
                 },
                 onFailure = { exception ->
                     errorMessage = exception.message ?: "Failed to load live match result"
                     isLoading = false
                 }
             )
+        }
+    }
+
+    // Polling logic for when waiting for opponent to finish
+    LaunchedEffect(isPolling) {
+        if (isPolling) {
+            while (isPolling) {
+                delay(1000) // Poll every second
+                scope.launch {
+                    val statusResult = repository.getLiveMatchStatus(matchId)
+                    statusResult.fold(
+                        onSuccess = { matchStatus ->
+                            // Check if match is completed or results are ready
+                            if (matchStatus.status == "completed" || matchStatus.status == "results_ready") {
+                                // Re-submit completion to get final results
+                                val finalResult = repository.completeLiveMatch(matchId, timeSeconds, mistakes)
+                                finalResult.fold(
+                                    onSuccess = { finalResponse ->
+                                        if (finalResponse.status == "match_completed") {
+                                            matchResult = finalResponse
+                                            isPolling = false // Stop polling
+                                        }
+                                    },
+                                    onFailure = { exception ->
+                                        // Continue polling on error
+                                        println("Error getting final results: ${exception.message}")
+                                    }
+                                )
+                            }
+                        },
+                        onFailure = { exception ->
+                            // Continue polling on error, but log it
+                            println("Polling error: ${exception.message}")
+                        }
+                    )
+                }
+            }
         }
     }
 
@@ -115,10 +172,10 @@ fun LiveMatchResultScreen(
                         colors = CardDefaults.cardColors(
                             containerColor = when (result.status) {
                                 "match_completed" -> {
-                                    when (result.winner) {
-                                        "challenged" -> MaterialTheme.colorScheme.primaryContainer
-                                        "challenger" -> MaterialTheme.colorScheme.errorContainer
-                                        "draw" -> MaterialTheme.colorScheme.secondaryContainer
+                                    when {
+                                        result.winner == "draw" -> MaterialTheme.colorScheme.secondaryContainer
+                                        result.winner == currentUserRole -> MaterialTheme.colorScheme.primaryContainer // User won
+                                        result.winner != null && result.winner != currentUserRole -> MaterialTheme.colorScheme.errorContainer // User lost
                                         else -> MaterialTheme.colorScheme.surfaceVariant
                                     }
                                 }
@@ -135,10 +192,10 @@ fun LiveMatchResultScreen(
                             Icon(
                                 imageVector = when (result.status) {
                                     "match_completed" -> {
-                                        when (result.winner) {
-                                            "challenged" -> Icons.Default.EmojiEvents
-                                            "challenger" -> Icons.Default.ThumbDown
-                                            "draw" -> Icons.Default.Balance
+                                        when {
+                                            result.winner == "draw" -> Icons.Default.Balance
+                                            result.winner == currentUserRole -> Icons.Default.EmojiEvents // User won
+                                            result.winner != null && result.winner != currentUserRole -> Icons.Default.ThumbDown // User lost
                                             else -> Icons.Default.Help
                                         }
                                     }
@@ -149,10 +206,10 @@ fun LiveMatchResultScreen(
                                 modifier = Modifier.size(48.dp),
                                 tint = when (result.status) {
                                     "match_completed" -> {
-                                        when (result.winner) {
-                                            "challenged" -> MaterialTheme.colorScheme.onPrimaryContainer
-                                            "challenger" -> MaterialTheme.colorScheme.onErrorContainer
-                                            "draw" -> MaterialTheme.colorScheme.onSecondaryContainer
+                                        when {
+                                            result.winner == "draw" -> MaterialTheme.colorScheme.onSecondaryContainer
+                                            result.winner == currentUserRole -> MaterialTheme.colorScheme.onPrimaryContainer // User won
+                                            result.winner != null && result.winner != currentUserRole -> MaterialTheme.colorScheme.onErrorContainer // User lost
                                             else -> MaterialTheme.colorScheme.onSurfaceVariant
                                         }
                                     }
@@ -165,10 +222,10 @@ fun LiveMatchResultScreen(
                             Text(
                                 text = when (result.status) {
                                     "match_completed" -> {
-                                        when (result.winner) {
-                                            "challenged" -> "🎉 You Won! 🎉"
-                                            "challenger" -> "You Lost"
-                                            "draw" -> "It's a Draw!"
+                                        when {
+                                            result.winner == "draw" -> "It's a Draw!"
+                                            result.winner == currentUserRole -> "🎉 You Won! 🎉"
+                                            result.winner != null && result.winner != currentUserRole -> "You Lost"
                                             else -> "Live Match Complete"
                                         }
                                     }
@@ -179,10 +236,10 @@ fun LiveMatchResultScreen(
                                 fontWeight = FontWeight.Bold,
                                 color = when (result.status) {
                                     "match_completed" -> {
-                                        when (result.winner) {
-                                            "challenged" -> MaterialTheme.colorScheme.onPrimaryContainer
-                                            "challenger" -> MaterialTheme.colorScheme.onErrorContainer
-                                            "draw" -> MaterialTheme.colorScheme.onSecondaryContainer
+                                        when {
+                                            result.winner == "draw" -> MaterialTheme.colorScheme.onSecondaryContainer
+                                            result.winner == currentUserRole -> MaterialTheme.colorScheme.onPrimaryContainer
+                                            result.winner != null && result.winner != currentUserRole -> MaterialTheme.colorScheme.onErrorContainer
                                             else -> MaterialTheme.colorScheme.onSurfaceVariant
                                         }
                                     }
@@ -225,37 +282,62 @@ fun LiveMatchResultScreen(
 
                                 Spacer(modifier = Modifier.height(20.dp))
 
-                                // Your results
-                                ResultRow(
-                                    label = "Your Time",
-                                    value = formatTime(result.challengedTime ?: timeSeconds),
-                                    isWinner = result.winner == "challenged"
-                                )
+                                // Show results based on current user's role
+                                if (currentUserRole == "challenger") {
+                                    // Current user is challenger
+                                    ResultRow(
+                                        label = "Your Time",
+                                        value = formatTime(result.challengerTime ?: timeSeconds),
+                                        isWinner = result.winner == "challenger"
+                                    )
+                                    ResultRow(
+                                        label = "Your Score",
+                                        value = result.challengerScore?.toString() ?: "N/A",
+                                        isWinner = result.winner == "challenger"
+                                    )
 
-                                ResultRow(
-                                    label = "Your Score",
-                                    value = result.challengedScore?.toString() ?: "N/A",
-                                    isWinner = result.winner == "challenged"
-                                )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Divider()
+                                    Spacer(modifier = Modifier.height(16.dp))
 
-                                Spacer(modifier = Modifier.height(16.dp))
+                                    ResultRow(
+                                        label = "Opponent Time",
+                                        value = formatTime(result.challengedTime ?: 0),
+                                        isWinner = result.winner == "challenged"
+                                    )
+                                    ResultRow(
+                                        label = "Opponent Score",
+                                        value = result.challengedScore?.toString() ?: "N/A",
+                                        isWinner = result.winner == "challenged"
+                                    )
+                                } else {
+                                    // Current user is challenged
+                                    ResultRow(
+                                        label = "Your Time",
+                                        value = formatTime(result.challengedTime ?: timeSeconds),
+                                        isWinner = result.winner == "challenged"
+                                    )
+                                    ResultRow(
+                                        label = "Your Score",
+                                        value = result.challengedScore?.toString() ?: "N/A",
+                                        isWinner = result.winner == "challenged"
+                                    )
 
-                                Divider()
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Divider()
+                                    Spacer(modifier = Modifier.height(16.dp))
 
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                // Opponent results
-                                ResultRow(
-                                    label = "Opponent Time",
-                                    value = formatTime(result.challengerTime ?: 0),
-                                    isWinner = result.winner == "challenger"
-                                )
-
-                                ResultRow(
-                                    label = "Opponent Score",
-                                    value = result.challengerScore?.toString() ?: "N/A",
-                                    isWinner = result.winner == "challenger"
-                                )
+                                    ResultRow(
+                                        label = "Opponent Time",
+                                        value = formatTime(result.challengerTime ?: 0),
+                                        isWinner = result.winner == "challenger"
+                                    )
+                                    ResultRow(
+                                        label = "Opponent Score",
+                                        value = result.challengerScore?.toString() ?: "N/A",
+                                        isWinner = result.winner == "challenger"
+                                    )
+                                }
                             }
                         }
                     }

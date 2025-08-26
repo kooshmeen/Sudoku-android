@@ -25,7 +25,7 @@ fun PendingChallengeCard(
     matchId: Int,
     onCancelChallenge: suspend (Int) -> Result<*>,
     onDismiss: () -> Unit,
-    onNavigateToGame: (String, Int?, Int?) -> Unit = { _, _, _ -> }, // difficulty, challengeId, liveMatchId
+    onNavigateToGame: (String, Int?, Int?, String?) -> Unit = { _, _, _, _ -> }, // difficulty, challengeId, liveMatchId, challengeRole
     modifier: Modifier = Modifier
 ) {
     var isLoading by remember { mutableStateOf(false) }
@@ -76,7 +76,7 @@ fun PendingChallengeCard(
                                             statusMessage = "Puzzle uploaded! Starting game..."
                                             isGeneratingPuzzle = false
                                             delay(1000) // Brief pause before navigation
-                                            onNavigateToGame(difficulty, null, matchId)
+                                            onNavigateToGame(difficulty, null, matchId, "challenger")
                                             onDismiss()
                                         },
                                         onFailure = { exception ->
@@ -89,7 +89,7 @@ fun PendingChallengeCard(
                                     // Match is active, navigate to game
                                     statusMessage = "Match is active! Starting game..."
                                     val difficulty = liveMatchStatus.difficulty
-                                    onNavigateToGame(difficulty, null, matchId)
+                                    onNavigateToGame(difficulty, null, matchId, "challenger")
                                     onDismiss()
                                 }
                                 "cancelled" -> {
@@ -101,6 +101,12 @@ fun PendingChallengeCard(
                     },
                     onFailure = { exception ->
                         errorMessage = "Polling error: ${exception.message}"
+                        // Probably, oponent rejected the match
+                        // Dismiss the card after showing the error for a short duration
+                        scope.launch {
+                            delay(2000)
+                            onDismiss()
+                        }
                     }
                 )
             }

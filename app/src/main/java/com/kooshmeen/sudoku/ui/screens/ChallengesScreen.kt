@@ -41,7 +41,7 @@ sealed class PendingInvitation {
 fun ChallengesScreen(
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {},
-    onNavigateToGame: (difficulty: String, challengeId: Int?, liveMatchId: Int?) -> Unit = { _, _, _ -> }
+    onNavigateToGame: (difficulty: String, challengeId: Int?, liveMatchId: Int?, challengeRole: String?) -> Unit = { _, _, _, _ -> }
 ) {
     var pendingInvitations by remember { mutableStateOf<List<PendingInvitation>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
@@ -172,7 +172,7 @@ fun ChallengesScreen(
                                                 val result = repository.acceptChallenge(challengeId)
                                                 result.fold(
                                                     onSuccess = {
-                                                        onNavigateToGame(invitation.invitation.difficulty, challengeId, null)
+                                                        onNavigateToGame(invitation.invitation.difficulty, challengeId, null, "challenged")
                                                     },
                                                     onFailure = { exception ->
                                                         errorMessage = exception.message
@@ -210,7 +210,23 @@ fun ChallengesScreen(
                                                 result.fold(
                                                     onSuccess = {
                                                         // Navigate to live game with the live match ID
-                                                        onNavigateToGame(invitation.match.difficulty, null, matchId)
+                                                        // onNavigateToGame(invitation.match.difficulty, null, matchId, "challenged")
+                                                        // TODO only navigate if match status is 'active'
+                                                        var check_status : String = "not_checked"
+                                                        while (check_status != "active") {
+                                                            val statusResult = repository.getLiveMatchStatus(matchId)
+                                                            statusResult.fold(
+                                                                onSuccess = { statusResponse ->
+                                                                    check_status = statusResponse.status
+                                                                },
+                                                                onFailure = { exception ->
+                                                                    errorMessage = exception.message
+                                                                }
+                                                            )
+                                                            // Avoid tight loop
+                                                            kotlinx.coroutines.delay(1000)
+                                                        }
+                                                        onNavigateToGame(invitation.match.difficulty, null, matchId, "challenged")
                                                     },
                                                     onFailure = { exception ->
                                                         errorMessage = exception.message
