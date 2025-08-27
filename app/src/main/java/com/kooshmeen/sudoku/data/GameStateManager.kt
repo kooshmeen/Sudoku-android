@@ -48,6 +48,7 @@ object GameStateManager {
      */
     fun startNewGame(difficulty: String, context: Context? = null) {
         context?.let { GameStatePersistence.clearSavedGame(it) }
+        _gameState.clearGrid()
         _gameState.startNewGame(difficulty)
     }
 
@@ -56,6 +57,7 @@ object GameStateManager {
      */
     fun loadChallengeGame(puzzleData: Map<*, *>, difficulty: String, context: Context? = null) {
         context?.let { GameStatePersistence.clearSavedGame(it) }
+        _gameState.clearGrid()
         _gameState.loadChallengeGame(puzzleData, difficulty)
     }
 

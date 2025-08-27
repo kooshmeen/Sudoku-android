@@ -6,6 +6,7 @@
 package com.kooshmeen.sudoku.data
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -377,6 +378,12 @@ class GameState {
      * Check if the game is completed
      */
     fun isGameComplete(): Boolean {
+        Log.d("GameState", "Checking game completion...")
+        // Check if minimum time requirement is met (5 seconds)
+        if (elapsedTimeSeconds < 5) {
+            return false
+        }
+
         // Check if all cells are filled and there are no errors
         for (row in 0..8) {
             for (col in 0..8) {
@@ -387,6 +394,22 @@ class GameState {
             }
         }
         return true
+    }
+
+    /**
+     * Empty grid
+     */
+    fun clearGrid() {
+        grid = Array(9) { Array(9) { SudokuCell() } }
+        selectedCell = null
+        selectedNumber = null
+        actionHistory.clear()
+        mistakesCount = 0
+        elapsedTimeSeconds = 0
+        isPaused = false
+        isGameActive = false
+        isGameCompleted = false
+        errorCells = emptySet()
     }
 
     /**
