@@ -37,6 +37,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,6 +52,7 @@ import com.kooshmeen.sudoku.ui.theme.SudokuTheme
 import androidx.compose.ui.platform.LocalContext
 import com.kooshmeen.sudoku.repository.SudokuRepository
 import com.kooshmeen.sudoku.data.api.User
+import kotlinx.coroutines.launch
 
 @Composable
 fun MainMenu (
@@ -77,10 +79,36 @@ fun MainMenu (
         GameStateManager.hasActiveGame() || GameStateManager.hasSavedGame(context)
     }
     val repository = remember { SudokuRepository(context) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         isLoggedIn = repository.isLoggedIn()
         currentUser = repository.fetchCurrentUser()
+
+        // If user appears to be logged in, validate their token
+        if (isLoggedIn && currentUser != null) {
+            scope.launch {
+                // Test token validity by calling a protected endpoint
+                val tokenValidationResult = repository.getMyGroups()
+                tokenValidationResult.fold(
+                    onSuccess = {
+                        // Token is valid, user stays logged in
+                    },
+                    onFailure = { exception ->
+                        // Check if it's a 401 (unauthorized) error indicating expired token
+                        if (exception.message?.contains("401") == true ||
+                            exception.message?.contains("Unauthorized") == true ||
+                            exception.message?.contains("authentication") == true) {
+                            // Token is expired/invalid, automatically log out
+                            repository.logout()
+                            isLoggedIn = false
+                            currentUser = null
+                        }
+                        // For other errors (network issues, etc.), keep user logged in
+                    }
+                )
+            }
+        }
     }
 
     Column (

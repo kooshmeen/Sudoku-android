@@ -31,7 +31,9 @@ fun LiveMatchResultScreen(
     timeSeconds: Int,
     mistakes: Int,
     modifier: Modifier = Modifier,
-    onNavigateBack: () -> Unit = {}
+    onNavigateBack: () -> Unit = {},
+    onNavigateToGroupMembers: () -> Unit = {},
+    onNavigateToChallenges: () -> Unit = {}
 ) {
     var matchResult by remember { mutableStateOf<LiveMatchCompletionResponse?>(null) }
     var isLoading by remember { mutableStateOf(true) }
@@ -344,12 +346,22 @@ fun LiveMatchResultScreen(
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    // Back button
+                    // Back button with role-based navigation
                     Button(
-                        onClick = onNavigateBack,
+                        onClick = {
+                            // Use the user's role to determine navigation
+                            if (currentUserRole == "challenger") {
+                                onNavigateToGroupMembers()
+                            } else {
+                                onNavigateToChallenges()
+                            }
+                        },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(if (result.status == "waiting_for_opponent") "Back to Challenges" else "Back to Challenges")
+                        Text(
+                            if (currentUserRole == "challenger") "Back to Group Members"
+                            else "Back to Challenges"
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))

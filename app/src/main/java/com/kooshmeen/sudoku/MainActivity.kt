@@ -328,7 +328,20 @@ class MainActivity : ComponentActivity() {
                                 timeSeconds = timeSeconds,
                                 mistakes = mistakes,
                                 onNavigateBack = {
-                                    // Navigate back to challenges or groups
+                                    // Since we can't easily determine the back stack,
+                                    // the LiveMatchResultScreen will handle role-based navigation internally
+                                    // and pass the appropriate navigation action here
+
+                                    // For now, default to going back to challenges
+                                    // The LiveMatchResultScreen will provide the correct navigation
+                                    NavController.popBackStack("challenges_screen", false)
+                                },
+                                onNavigateToGroupMembers = {
+                                    // Navigate back to group members for challengers
+                                    NavController.popBackStack("group_members_screen/{groupId}", false)
+                                },
+                                onNavigateToChallenges = {
+                                    // Navigate back to challenges for challenged players
                                     NavController.popBackStack("challenges_screen", false)
                                 },
                                 modifier = Modifier
