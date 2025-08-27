@@ -89,6 +89,7 @@ fun GameScreen(
 
     // Live match polling logic
     LaunchedEffect(isLiveMatch, liveMatchId, isPolling) {
+        gameState.resetGameCompletion()
         if (isLiveMatch && liveMatchId != null && isPolling) {
             while (isPolling) {
                 delay(1000) // Poll every second
@@ -129,6 +130,7 @@ fun GameScreen(
 
     // Load challenge data if this is a challenge game
     LaunchedEffect(challengeId, difficulty) {
+        gameState.resetGameCompletion()
         challengeId?.let { id ->
             isChallenge = true
 
@@ -166,6 +168,7 @@ fun GameScreen(
 
     // Load live match data if this is a live match
     LaunchedEffect(liveMatchId, isLiveMatch) {
+        gameState.resetGameCompletion()
         if (isLiveMatch && liveMatchId != null) {
             scope.launch {
                 val result = repository.getLiveMatchStatus(liveMatchId)

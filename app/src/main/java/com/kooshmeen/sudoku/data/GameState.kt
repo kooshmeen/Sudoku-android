@@ -21,6 +21,10 @@ class GameState {
     var grid by mutableStateOf(Array(9) { Array(9) { SudokuCell() } })
         private set
 
+    // Store the original puzzle (before any player input)
+    internal var originalPuzzleGrid: Array<IntArray> = Array(9) { IntArray(9) }
+        private set
+
     // Currently selected cell
     var selectedCell by mutableStateOf<Pair<Int, Int>?>(null)
         private set
@@ -378,7 +382,6 @@ class GameState {
      * Check if the game is completed
      */
     fun isGameComplete(): Boolean {
-        Log.d("GameState", "Checking game completion...")
         // Check if minimum time requirement is met (5 seconds)
         if (elapsedTimeSeconds < 5) {
             return false
@@ -545,6 +548,13 @@ class GameState {
         if (!isPaused && isGameActive) {
             elapsedTimeSeconds++
         }
+    }
+
+    /**
+     * Force reset game completion state - used to prevent race conditions
+     */
+    fun resetGameCompletion() {
+        isGameCompleted = false
     }
 
     /**
