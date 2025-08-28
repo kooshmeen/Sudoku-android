@@ -224,7 +224,8 @@ data class LiveMatchStatus(
 
 data class LiveMatchCompletionRequest(
     val timeSeconds: Int,
-    val mistakes: Int
+    val mistakes: Int,
+    val update: Boolean
 )
 
 data class LiveMatchCompletionResponse(

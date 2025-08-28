@@ -64,7 +64,7 @@ fun LiveMatchResultScreen(
                 }
             )
 
-            val result = repository.completeLiveMatch(matchId, timeSeconds, mistakes)
+            val result = repository.completeLiveMatch(matchId, timeSeconds, mistakes, false)
             result.fold(
                 onSuccess = { response ->
                     matchResult = response
@@ -95,7 +95,7 @@ fun LiveMatchResultScreen(
                             // Check if match is completed or results are ready
                             if (matchStatus.status == "completed" || matchStatus.status == "results_ready") {
                                 // Re-submit completion to get final results
-                                val finalResult = repository.completeLiveMatch(matchId, timeSeconds, mistakes)
+                                val finalResult = repository.completeLiveMatch(matchId, timeSeconds, mistakes, true)
                                 finalResult.fold(
                                     onSuccess = { finalResponse ->
                                         if (finalResponse.status == "match_completed") {

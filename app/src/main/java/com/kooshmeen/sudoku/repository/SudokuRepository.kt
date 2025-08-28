@@ -620,11 +620,12 @@ class SudokuRepository(private val context: Context) {
     suspend fun completeLiveMatch(
         matchId: Int,
         timeSeconds: Int,
-        mistakes: Int
+        mistakes: Int,
+        update: Boolean
     ): Result<LiveMatchCompletionResponse> {
         return try {
             val token = authToken ?: return Result.failure(Exception("Not authenticated"))
-            val request = LiveMatchCompletionRequest(timeSeconds, mistakes)
+            val request = LiveMatchCompletionRequest(timeSeconds, mistakes, update)
             val response = apiService.completeLiveMatch("Bearer $token", matchId, request)
 
             if (response.isSuccessful) {

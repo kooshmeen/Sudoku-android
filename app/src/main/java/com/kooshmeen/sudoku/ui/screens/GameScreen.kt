@@ -474,7 +474,8 @@ fun GameScreen(
                     val liveMatchResult = repository.completeLiveMatch(
                         matchId = liveMatchId,
                         timeSeconds = gameState.elapsedTimeSeconds,
-                        mistakes = gameState.mistakesCount
+                        mistakes = gameState.mistakesCount,
+                        update = false
                     )
                     liveMatchResult.fold(
                         onSuccess = {
