@@ -89,7 +89,7 @@ fun MainMenu (
         if (isLoggedIn && currentUser != null) {
             scope.launch {
                 // Test token validity by calling a protected endpoint
-                val tokenValidationResult = repository.getMyGroups()
+                val tokenValidationResult = repository.getPendingChallenges()
                 tokenValidationResult.fold(
                     onSuccess = {
                         // Token is valid, user stays logged in

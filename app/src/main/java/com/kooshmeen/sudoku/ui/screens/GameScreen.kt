@@ -337,6 +337,10 @@ fun GameScreen(
                 onCellClick = { row, col ->
                     gameState.inputToCell(row, col)
                 },
+                onNoteToggle = { row, col, number ->
+                    gameState.toggleNote(row, col, number)
+                },
+                gameMode = gameState.gameMode,
                 modifier = Modifier.fillMaxWidth()
             )
 

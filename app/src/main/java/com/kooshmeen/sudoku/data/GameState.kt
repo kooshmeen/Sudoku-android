@@ -265,7 +265,7 @@ class GameState {
     /**
      * Toggle a note in a cell
      */
-    private fun toggleNote(row: Int, col: Int, note: Int) {
+    fun toggleNote(row: Int, col: Int, note: Int) {
         val currentCell = grid[row][col]
 
         // Only allow notes in empty cells
